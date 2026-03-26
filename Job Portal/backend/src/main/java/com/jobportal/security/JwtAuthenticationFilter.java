@@ -15,8 +15,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -30,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            logger.debug("JWT Filter - URI: {}, Token present: {}", request.getRequestURI(), (jwt != null && !jwt.isEmpty()));
             if (jwt != null && !jwt.isEmpty()) {
                 try {
                     if (jwtUtils.validateJwtToken(jwt)) {
@@ -39,13 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                        logger.debug("JWT Filter - Authenticated user: {}", username);
+                    } else {
+                        logger.debug("JWT Filter - Token validation failed");
                     }
                 } catch (Exception e) {
-                    // Invalid token, continue without authentication
+                    logger.debug("JWT Filter - Token processing error: {}", e.getMessage());
                 }
             }
         } catch (Exception e) {
-            // Log error but continue
+            logger.debug("JWT Filter - Unexpected error: {}", e.getMessage());
         }
         filterChain.doFilter(request, response);
     }
