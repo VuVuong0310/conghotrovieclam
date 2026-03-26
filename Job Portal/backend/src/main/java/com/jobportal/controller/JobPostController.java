@@ -40,14 +40,17 @@ public class JobPostController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_EMPLOYER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EMPLOYER', 'ROLE_ADMIN')")
     public ResponseEntity<?> create(@RequestBody JobPost job, Authentication auth) {
         Optional<User> employer = userRepository.findByUsername(auth.getName());
         if (employer.isPresent()) {
             job.setEmployer(employer.get());
         }
         job.setCreatedAt(java.time.LocalDateTime.now());
-        job.setStatus(JobPost.JobStatus.PENDING);
+        // Admin-created jobs are auto-approved
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        job.setStatus(isAdmin ? JobPost.JobStatus.APPROVED : JobPost.JobStatus.PENDING);
 
         // Link category if categoryId is provided
         if (job.getCategory() != null && job.getCategory().getId() != null) {
@@ -60,7 +63,7 @@ public class JobPostController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_EMPLOYER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EMPLOYER', 'ROLE_ADMIN')")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody JobPost job, Authentication auth) {
         Optional<JobPost> existing = jobPostRepository.findById(id);
         if (existing.isEmpty()) {

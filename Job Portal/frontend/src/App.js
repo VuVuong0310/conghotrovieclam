@@ -123,7 +123,7 @@ function App() {
                 <Link to="/jobs">🔍 Tìm Việc</Link>
                 {isCandidate && <Link to="/recommendations">⭐ Đề Xuất</Link>}
                 {isCandidate && <Link to="/my-applications">📋 Đơn Ứng Tuyển</Link>}
-                {isEmployer && <Link to="/create-job">➕ Đăng Tuyển</Link>}
+                {(isEmployer || isAdmin) && <Link to="/create-job">➕ Đăng Tuyển</Link>}
                 {isEmployer && <Link to="/employer-dashboard">💼 Dashboard</Link>}
                 {isAdmin && <Link to="/admin-dashboard">⚙️ Admin</Link>}
                 {isCandidate && <Link to={`/profile/${userId || 1}`}>👤 Hồ Sơ</Link>}
