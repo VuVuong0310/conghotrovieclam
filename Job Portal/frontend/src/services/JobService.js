@@ -1,9 +1,10 @@
 import axios from 'axios';
 import AuthService from './AuthService';
+import API_BASE from '../config/api';
 
-const API_URL = 'http://localhost:8080/api/jobs';
-const SEARCH_API_URL = 'http://localhost:8080/api/search';
-const RECOMMENDATIONS_API_URL = 'http://localhost:8080/api/recommendations';
+const API_URL = API_BASE + '/jobs';
+const SEARCH_API_URL = API_BASE + '/search';
+const RECOMMENDATIONS_API_URL = API_BASE + '/recommendations';
 
 class JobService {
   getJobs() {

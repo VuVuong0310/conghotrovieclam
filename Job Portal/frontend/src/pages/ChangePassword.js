@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -30,7 +31,7 @@ function ChangePassword() {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/change-password', {
+      const res = await axios.post(`${API_BASE}/auth/change-password`, {
         currentPassword,
         newPassword
       }, {

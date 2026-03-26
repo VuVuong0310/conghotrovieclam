@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import JobService from '../services/JobService';
 import AuthService from '../services/AuthService';
 import axios from 'axios';
+import API_BASE from '../config/api';
 
 function JobDetails() {
   const { id } = useParams();
@@ -34,7 +35,7 @@ function JobDetails() {
 
   const checkIfApplied = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/applications/check/${id}`, {
+      const response = await axios.get(`${API_BASE}/applications/check/${id}`, {
         headers: {
           'Authorization': 'Bearer ' + AuthService.getToken()
         }
@@ -54,7 +55,7 @@ function JobDetails() {
     setApplying(true);
     try {
       await axios.post(
-        `http://localhost:8080/api/applications/apply/${id}`,
+        `${API_BASE}/applications/apply/${id}`,
         {},
         {
           headers: {

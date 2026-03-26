@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 /* ── tiny bar-chart (pure CSS, no library needed) ── */
 function MiniBarChart({ data, colors, height = 160 }) {
@@ -58,7 +59,7 @@ function AdminDashboard() {
 
   const fetchStatistics = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/admin/statistics', authHeader);
+      const response = await axios.get(`${API_BASE}/admin/statistics`, authHeader);
       setStatistics(response.data);
       setLoading(false);
     } catch (error) {
@@ -72,14 +73,14 @@ function AdminDashboard() {
 
   const fetchPendingJobs = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/api/admin/jobs/pending', authHeader);
+      const res = await axios.get(`${API_BASE}/admin/jobs/pending`, authHeader);
       setPendingJobs(res.data);
     } catch (e) { console.error(e); }
   };
 
   const handleApproveJob = async (jobId) => {
     try {
-      await axios.post(`http://localhost:8080/api/admin/jobs/${jobId}/approve`, {}, authHeader);
+      await axios.post(`${API_BASE}/admin/jobs/${jobId}/approve`, {}, authHeader);
       fetchPendingJobs(); fetchStatistics();
     } catch (e) { alert('Lỗi khi phê duyệt'); }
   };
@@ -88,13 +89,13 @@ function AdminDashboard() {
     const reason = prompt('Lý do từ chối:');
     if (!reason) return;
     try {
-      await axios.post(`http://localhost:8080/api/admin/jobs/${jobId}/reject`, { reason }, authHeader);
+      await axios.post(`${API_BASE}/admin/jobs/${jobId}/reject`, { reason }, authHeader);
       fetchPendingJobs(); fetchStatistics();
     } catch (e) { alert('Lỗi khi từ chối'); }
   };
 
   const fetchCategories = async () => {
-    try { const r = await axios.get('http://localhost:8080/api/admin/categories', authHeader); setCategories(r.data); }
+    try { const r = await axios.get(`${API_BASE}/admin/categories`, authHeader); setCategories(r.data); }
     catch (e) { console.error(e); }
   };
 
@@ -102,10 +103,10 @@ function AdminDashboard() {
     e.preventDefault();
     try {
       if (editingCatId) {
-        await axios.put(`http://localhost:8080/api/admin/categories/${editingCatId}`, catForm, authHeader);
+        await axios.put(`${API_BASE}/admin/categories/${editingCatId}`, catForm, authHeader);
         setEditingCatId(null);
       } else {
-        await axios.post('http://localhost:8080/api/admin/categories', catForm, authHeader);
+        await axios.post(`${API_BASE}/admin/categories`, catForm, authHeader);
       }
       setCatForm({ name: '', description: '' }); fetchCategories();
     } catch (e) { alert('Lỗi khi lưu danh mục'); }
@@ -115,52 +116,52 @@ function AdminDashboard() {
 
   const handleDeleteCat = async (id) => {
     if (!window.confirm('Xóa danh mục này?')) return;
-    try { await axios.delete(`http://localhost:8080/api/admin/categories/${id}`, authHeader); fetchCategories(); }
+    try { await axios.delete(`${API_BASE}/admin/categories/${id}`, authHeader); fetchCategories(); }
     catch (e) { alert('Lỗi khi xóa'); }
   };
 
   const fetchUsers = async () => {
-    try { const r = await axios.get('http://localhost:8080/api/admin/users', authHeader); setUsers(r.data); }
+    try { const r = await axios.get(`${API_BASE}/admin/users`, authHeader); setUsers(r.data); }
     catch (e) { console.error(e); }
   };
 
   const handleToggleLock = async (userId) => {
-    try { await axios.put(`http://localhost:8080/api/admin/users/${userId}/toggle-lock`, {}, authHeader); fetchUsers(); fetchStatistics(); }
+    try { await axios.put(`${API_BASE}/admin/users/${userId}/toggle-lock`, {}, authHeader); fetchUsers(); fetchStatistics(); }
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
   const handleDeleteUser = async (userId, username) => {
     if (!window.confirm(`Xóa tài khoản "${username}"?`)) return;
-    try { await axios.delete(`http://localhost:8080/api/admin/users/${userId}`, authHeader); fetchUsers(); fetchStatistics(); }
+    try { await axios.delete(`${API_BASE}/admin/users/${userId}`, authHeader); fetchUsers(); fetchStatistics(); }
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
   const fetchAllJobs = async () => {
-    try { const r = await axios.get('http://localhost:8080/api/admin/jobs', authHeader); setAllJobs(r.data); }
+    try { const r = await axios.get(`${API_BASE}/admin/jobs`, authHeader); setAllJobs(r.data); }
     catch (e) { console.error(e); }
   };
 
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm('Xóa tin tuyển dụng này?')) return;
-    try { await axios.delete(`http://localhost:8080/api/admin/jobs/${jobId}`, authHeader); fetchAllJobs(); fetchStatistics(); }
+    try { await axios.delete(`${API_BASE}/admin/jobs/${jobId}`, authHeader); fetchAllJobs(); fetchStatistics(); }
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
   const handleUpdateJob = async (jobId) => {
     if (!editingJob) return;
     try {
-      await axios.put(`http://localhost:8080/api/admin/jobs/${jobId}`, editingJob, authHeader);
+      await axios.put(`${API_BASE}/admin/jobs/${jobId}`, editingJob, authHeader);
       setEditingJob(null); fetchAllJobs(); fetchStatistics();
     } catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
   const handleChangeJobStatus = async (jobId, newStatus) => {
-    try { await axios.put(`http://localhost:8080/api/admin/jobs/${jobId}`, { status: newStatus }, authHeader); fetchAllJobs(); fetchStatistics(); }
+    try { await axios.put(`${API_BASE}/admin/jobs/${jobId}`, { status: newStatus }, authHeader); fetchAllJobs(); fetchStatistics(); }
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
   const handleToggleActive = async (jobId) => {
-    try { await axios.put(`http://localhost:8080/api/admin/jobs/${jobId}/toggle-active`, {}, authHeader); fetchAllJobs(); }
+    try { await axios.put(`${API_BASE}/admin/jobs/${jobId}/toggle-active`, {}, authHeader); fetchAllJobs(); }
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 

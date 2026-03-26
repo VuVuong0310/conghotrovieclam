@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 const JobListAdvanced = () => {
     const [jobs, setJobs] = useState([]);
@@ -43,7 +44,7 @@ const JobListAdvanced = () => {
             if (searchMaxSalary) params.maxSalary = parseFloat(searchMaxSalary) * 1000000;
             if (searchEmploymentType) params.employmentType = searchEmploymentType;
 
-            const response = await axios.get('http://localhost:8080/api/search/jobs', {
+            const response = await axios.get(`${API_BASE}/search/jobs`, {
                 headers,
                 params
             });
@@ -56,7 +57,7 @@ const JobListAdvanced = () => {
             console.error('Error fetching jobs:', error);
             // Fallback to basic jobs API if search fails
             try {
-                const response = await axios.get('http://localhost:8080/api/jobs');
+                const response = await axios.get(`${API_BASE}/jobs`);
                 setJobs(response.data);
             } catch (err) {
                 console.error('Error fetching jobs from basic API:', err);

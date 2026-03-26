@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 function GoogleCallback() {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,7 @@ function GoogleCallback() {
 
     const exchangeCode = async () => {
       try {
-        const res = await axios.post('http://localhost:8080/api/auth/google', {
+        const res = await axios.post(`${API_BASE}/auth/google`, {
           credential: code
         });
         AuthService.saveToken(res.data.token);

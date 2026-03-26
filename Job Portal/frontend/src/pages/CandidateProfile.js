@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../config/api';
 import EducationService from '../services/EducationService';
 import ExperienceService from '../services/ExperienceService';
 import ProjectService from '../services/ProjectService';
@@ -33,7 +34,7 @@ function CandidateProfile() {
   const [editingProjId, setEditingProjId] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/profile/${userId}`, {
+    axios.get(`${API_BASE}/profile/${userId}`, {
       headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
     })
       .then(res => {
@@ -67,7 +68,7 @@ function CandidateProfile() {
     loadExperiences();
     loadProjects();
     // Load profile photo
-    setPhotoPreview(`http://localhost:8080/api/profile/${userId}/photo`);
+    setPhotoPreview(`${API_BASE}/profile/${userId}/photo`);
   }, [userId]);
 
   const loadEducations = () => {
@@ -98,7 +99,7 @@ function CandidateProfile() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await axios.post(`http://localhost:8080/api/profile/${userId}/resume`, formData, {
+      await axios.post(`${API_BASE}/profile/${userId}/resume`, formData, {
         headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'multipart/form-data' }
       });
       alert('Resume uploaded successfully!');
@@ -113,10 +114,10 @@ function CandidateProfile() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await axios.post(`http://localhost:8080/api/profile/${userId}/photo`, formData, {
+      await axios.post(`${API_BASE}/profile/${userId}/photo`, formData, {
         headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'multipart/form-data' }
       });
-      setPhotoPreview(`http://localhost:8080/api/profile/${userId}/photo?t=${Date.now()}`);
+      setPhotoPreview(`${API_BASE}/profile/${userId}/photo?t=${Date.now()}`);
       alert('Photo uploaded successfully!');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to upload photo');
@@ -131,7 +132,7 @@ function CandidateProfile() {
       if (typeof payload.skills === 'string') {
         payload.skills = payload.skills.split(',').map(s => s.trim()).filter(s => s);
       }
-      await axios.put(`http://localhost:8080/api/profile/${userId}`, payload, {
+      await axios.put(`${API_BASE}/profile/${userId}`, payload, {
         headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
       });
       alert('Profile updated successfully!');
@@ -260,11 +261,11 @@ function CandidateProfile() {
   };
 
   const viewCV = () => {
-    window.open(`http://localhost:8080/api/profile/${userId}/cv`, '_blank');
+    window.open(`${API_BASE}/profile/${userId}/cv`, '_blank');
   };
 
   const viewResume = () => {
-    window.open(`http://localhost:8080/api/profile/${userId}/resume`, '_blank');
+    window.open(`${API_BASE}/profile/${userId}/resume`, '_blank');
   };
 
   return (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 function EmployerDashboard() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ function EmployerDashboard() {
   const fetchDashboard = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:8080/api/employer/dashboard',
+        `${API_BASE}/employer/dashboard`,
         {
           headers: {
             'Authorization': 'Bearer ' + AuthService.getToken()
@@ -66,7 +67,7 @@ function EmployerDashboard() {
   const fetchMyJobs = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:8080/api/employer/jobs',
+        `${API_BASE}/employer/jobs`,
         {
           headers: {
             'Authorization': 'Bearer ' + AuthService.getToken()
@@ -85,7 +86,7 @@ function EmployerDashboard() {
     setSelectedJobId(jobId);
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/employer/jobs/${jobId}/applications`,
+        `${API_BASE}/employer/jobs/${jobId}/applications`,
         {
           headers: {
             'Authorization': 'Bearer ' + AuthService.getToken()
@@ -101,7 +102,7 @@ function EmployerDashboard() {
   const handleStatusChange = async (applicationId, newStatus) => {
     try {
       await axios.put(
-        `http://localhost:8080/api/applications/${applicationId}/status`,
+        `${API_BASE}/applications/${applicationId}/status`,
         { status: newStatus },
         {
           headers: {
@@ -131,9 +132,9 @@ function EmployerDashboard() {
     const headers = { 'Authorization': 'Bearer ' + AuthService.getToken() };
     try {
       const [profileRes, eduRes, expRes] = await Promise.all([
-        axios.get(`http://localhost:8080/api/profile/${candidateId}`, { headers }),
-        axios.get(`http://localhost:8080/api/candidates/${candidateId}/educations`, { headers }),
-        axios.get(`http://localhost:8080/api/candidates/${candidateId}/experiences`, { headers })
+        axios.get(`${API_BASE}/profile/${candidateId}`, { headers }),
+        axios.get(`${API_BASE}/candidates/${candidateId}/educations`, { headers }),
+        axios.get(`${API_BASE}/candidates/${candidateId}/experiences`, { headers })
       ]);
       const data = profileRes.data || {};
       if (Array.isArray(data.skills)) {
@@ -151,7 +152,7 @@ function EmployerDashboard() {
 
   const fetchCompanyProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/employer/company-profile', {
+      const response = await axios.get(`${API_BASE}/employer/company-profile`, {
         headers: { 'Authorization': 'Bearer ' + AuthService.getToken() }
       });
       setCompanyProfile(response.data || {});
@@ -163,7 +164,7 @@ function EmployerDashboard() {
   const handleSaveCompanyProfile = async (e) => {
     e.preventDefault();
     try {
-      await axios.put('http://localhost:8080/api/employer/company-profile', companyProfile, {
+      await axios.put(`${API_BASE}/employer/company-profile`, companyProfile, {
         headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': 'application/json' }
       });
       alert('Cập nhật thông tin công ty thành công!');
@@ -414,11 +415,11 @@ function EmployerDashboard() {
 
                   {/* Action Buttons */}
                   <div style={{ display: 'flex', gap: 10, marginTop: 20, borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
-                    <button className="btn btn-success" onClick={() => window.open(`http://localhost:8080/api/profile/${cvData.candidateId}/cv`, '_blank')}>
+                    <button className="btn btn-success" onClick={() => window.open(`${API_BASE}/profile/${cvData.candidateId}/cv`, '_blank')}>
                       📋 Xem CV đầy đủ
                     </button>
                     {cvData.resumePath && (
-                      <button className="btn btn-info" onClick={() => window.open(`http://localhost:8080/api/profile/${cvData.candidateId}/resume`, '_blank')}>
+                      <button className="btn btn-info" onClick={() => window.open(`${API_BASE}/profile/${cvData.candidateId}/resume`, '_blank')}>
                         📎 Xem Resume PDF
                       </button>
                     )}

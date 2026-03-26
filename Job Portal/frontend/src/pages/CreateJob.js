@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import JobService from '../services/JobService';
+import API_BASE from '../config/api';
 
 function CreateJob() {
   const [job, setJob] = useState({
@@ -16,7 +17,7 @@ function CreateJob() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/categories')
+    axios.get(`${API_BASE}/categories`)
       .then(res => setCategories(res.data))
       .catch(err => console.error(err));
   }, []);

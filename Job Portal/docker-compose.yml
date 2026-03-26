@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: jobportal_db
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -25,9 +25,23 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/jobportal_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/jobportal_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: vuvanvuong2004@gmail.com
+      SPRING_MAIL_PASSWORD: "ohhl zboj wndv cgzc"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      JOBPORTAL_JWTSECRET: ChangeThisSecretKeyToSomethingLongerAndMoreSecure1234567890123456789012345678901234567890123456789
+      JOBPORTAL_JWTEXPIRATIONMS: 86400000
+      GOOGLE_CLIENT_ID: 459714649331-mnljcp99f4hsaep940toag14qdep8n0c.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+    volumes:
+      - backend_uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -35,7 +49,10 @@ services:
       - jobportal-net
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: /api
     container_name: jobportal-frontend
     ports:
       - "80:80"
@@ -46,6 +63,7 @@ services:
 
 volumes:
   mysql_data:
+  backend_uploads:
 
 networks:
   jobportal-net:

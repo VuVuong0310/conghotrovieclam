@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import API_BASE from '../config/api';
 
 const JobRecommendations = () => {
     const [jobs, setJobs] = useState([]);
@@ -25,15 +26,15 @@ const JobRecommendations = () => {
 
             switch(activeTab) {
                 case 'recommended':
-                    url = 'http://localhost:8080/api/recommendations/jobs';
+                    url = `${API_BASE}/recommendations/jobs`;
                     params.page = page;
                     params.size = 10;
                     break;
                 case 'trending':
-                    url = 'http://localhost:8080/api/recommendations/trending';
+                    url = `${API_BASE}/recommendations/trending`;
                     break;
                 case 'new':
-                    url = 'http://localhost:8080/api/recommendations/new';
+                    url = `${API_BASE}/recommendations/new`;
                     params.limitDays = 7;
                     break;
                 default:

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../config/api';
 
 function ForgotPassword() {
   const [step, setStep] = useState(1); // 1: nhập email, 2: nhập mật khẩu
@@ -22,7 +23,7 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:8080/api/auth/check-email', { email });
+      await axios.post(`${API_BASE}/auth/check-email`, { email });
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Email không tồn tại trong hệ thống.');
@@ -47,7 +48,7 @@ function ForgotPassword() {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/verify-and-change-password', {
+      const res = await axios.post(`${API_BASE}/auth/verify-and-change-password`, {
         email,
         oldPassword,
         newPassword
