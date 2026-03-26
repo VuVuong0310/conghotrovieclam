@@ -2,6 +2,7 @@ package com.jobportal.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,7 +29,9 @@ public class User {
     @Column(nullable = false, columnDefinition = "bit(1) default 1")
     private boolean enabled = true;
 
-    // Additional profile fields could go in subclass or separate entity
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpiry;
 
     public Long getId() {
         return id;
@@ -68,5 +71,21 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public LocalDateTime getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
     }
 }

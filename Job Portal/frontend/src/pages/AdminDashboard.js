@@ -159,6 +159,11 @@ function AdminDashboard() {
     catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
   };
 
+  const handleToggleActive = async (jobId) => {
+    try { await axios.put(`http://localhost:8080/api/admin/jobs/${jobId}/toggle-active`, {}, authHeader); fetchAllJobs(); }
+    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
+  };
+
   const filteredJobs = jobFilter === 'ALL' ? allJobs : allJobs.filter(j => j.status === jobFilter);
 
   // sidebar navigation items
@@ -356,7 +361,7 @@ function AdminDashboard() {
         <div style={{ overflowX: 'auto' }}>
           <table className="table" style={{ minWidth: 800 }}>
             <thead>
-              <tr><th>ID</th><th>Tiêu đề</th><th>Nhà tuyển dụng</th><th>Địa điểm</th><th>Lương</th><th>Trạng thái</th><th>Hành động</th></tr>
+              <tr><th>ID</th><th>Tiêu đề</th><th>Nhà tuyển dụng</th><th>Địa điểm</th><th>Lương</th><th>Trạng thái</th><th>Hiển thị</th><th>Hành động</th></tr>
             </thead>
             <tbody>
               {filteredJobs.map(job => (
@@ -373,6 +378,17 @@ function AdminDashboard() {
                     )}>
                       {job.status === 'APPROVED' ? '✅ Đã duyệt' : job.status === 'PENDING' ? '⏳ Chờ duyệt' : '❌ Từ chối'}
                     </span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleToggleActive(job.id)}
+                      style={{
+                        padding: '4px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                        background: job.active !== false ? '#dcfce7' : '#fee2e2',
+                        color: job.active !== false ? '#166534' : '#991b1b'
+                      }}>
+                      {job.active !== false ? '🟢 Bật' : '🔴 Tắt'}
+                    </button>
                   </td>
                   <td>
                     <div style={S.tblAction}>

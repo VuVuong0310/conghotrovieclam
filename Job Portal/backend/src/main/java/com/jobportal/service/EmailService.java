@@ -252,4 +252,36 @@ public class EmailService {
                 "</body>" +
                 "</html>";
     }
+
+    public void sendPasswordResetEmail(String toEmail, String resetLink) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Đặt lại mật khẩu - Job Portal");
+
+            String htmlContent = "<html>" +
+                    "<body style='font-family: Arial, sans-serif; color: #333;'>" +
+                    "<div style='max-width: 600px; margin: 0 auto;'>" +
+                    "<h2 style='color: #2563eb;'>🔐 Đặt Lại Mật Khẩu</h2>" +
+                    "<p>Xin chào,</p>" +
+                    "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản Job Portal.</p>" +
+                    "<p>Nhấn vào nút bên dưới để đặt lại mật khẩu:</p>" +
+                    "<div style='text-align: center; margin: 30px 0;'>" +
+                    "<a href='" + resetLink + "' style='display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;'>Đặt Lại Mật Khẩu</a>" +
+                    "</div>" +
+                    "<p style='color: #6b7280; font-size: 14px;'>Link này sẽ hết hạn sau 30 phút.</p>" +
+                    "<p style='color: #6b7280; font-size: 14px;'>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
+                    "<p>Trân trọng,<br/>Job Portal Team</p>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error("Failed to send password reset email: {}", e.getMessage());
+        }
+    }
 }

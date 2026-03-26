@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import JobList from './pages/JobList';
 import JobListAdvanced from './pages/JobListAdvanced';
 import JobRecommendations from './pages/JobRecommendations';
@@ -11,6 +13,8 @@ import CandidateProfile from './pages/CandidateProfile';
 import MyApplications from './pages/MyApplications';
 import EmployerDashboard from './pages/EmployerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import GoogleCallback from './pages/GoogleCallback';
+import ChangePassword from './pages/ChangePassword';
 import AuthService from './services/AuthService';
 import NotificationService from './services/NotificationService';
 import './App.css';
@@ -127,6 +131,7 @@ function App() {
                 {isEmployer && <Link to="/employer-dashboard">💼 Dashboard</Link>}
                 {isAdmin && <Link to="/admin-dashboard">⚙️ Admin</Link>}
                 {isCandidate && <Link to={`/profile/${userId || 1}`}>👤 Hồ Sơ</Link>}
+                <Link to="/change-password">🔐 Đổi MK</Link>
                 <NotificationBell />
                 <button onClick={() => {
                   AuthService.logout();
@@ -148,6 +153,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/google-callback" element={<GoogleCallback />} />
+          <Route path="/change-password" element={isLoggedIn ? <ChangePassword /> : <Navigate to="/login" />} />
           <Route path="/jobs" element={<JobList />} />
           <Route path="/jobs-advanced" element={<JobListAdvanced />} />
           <Route path="/recommendations" element={isLoggedIn ? <JobRecommendations /> : <Navigate to="/login" />} />

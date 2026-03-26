@@ -1,4 +1,5 @@
 com\jobportal\security\JwtAuthenticationFilter.class
+com\jobportal\repository\ProjectRepository.class
 com\jobportal\service\UserDetailsServiceImpl.class
 com\jobportal\controller\JobApplicationController$AppliedResponse.class
 com\jobportal\entity\JobPost$JobStatus.class
@@ -8,13 +9,17 @@ com\jobportal\service\EmployerService.class
 com\jobportal\controller\AuthController$MessageResponse.class
 com\jobportal\repository\JobPostRepository.class
 com\jobportal\entity\Experience.class
+com\jobportal\entity\Project.class
 com\jobportal\controller\AuthController.class
 com\jobportal\controller\EmployerDashboardController$MessageResponse.class
+com\jobportal\controller\AuthController$ChangePasswordRequest.class
+com\jobportal\controller\AuthController$VerifyChangePasswordRequest.class
 com\jobportal\entity\CandidateProfile.class
 com\jobportal\JobPortalApplication.class
 com\jobportal\controller\AuthController$JwtResponse.class
 com\jobportal\service\JobApplicationService.class
 com\jobportal\entity\JobCategory.class
+com\jobportal\controller\AuthController$ForgotPasswordRequest.class
 com\jobportal\controller\AuthController$SignupRequest.class
 com\jobportal\controller\CandidateProfileController$MessageResponse.class
 com\jobportal\service\CandidateProfileService.class
@@ -41,9 +46,13 @@ com\jobportal\entity\JobApplication$Status.class
 com\jobportal\config\DataInitializer.class
 com\jobportal\service\JobApplicationService$1.class
 com\jobportal\controller\AdminController$TestEmailRequest.class
+com\jobportal\repository\EmployerProfileRepository.class
 com\jobportal\repository\NotificationRepository.class
 com\jobportal\controller\AdminController$RejectRequest.class
 com\jobportal\controller\NotificationController$MessageResponse.class
+com\jobportal\controller\AuthController$ResetPasswordRequest.class
+com\jobportal\controller\AdminController$UserResponse.class
+com\jobportal\controller\AuthController$GoogleLoginRequest.class
 com\jobportal\repository\ExperienceRepository.class
 com\jobportal\controller\JobApplicationController$1.class
 com\jobportal\controller\JobApplicationController$StatusUpdateRequest.class
@@ -54,6 +63,7 @@ com\jobportal\controller\NotificationController.class
 com\jobportal\controller\SearchController.class
 com\jobportal\controller\JobApplicationController$MessageResponse.class
 com\jobportal\entity\Role.class
+com\jobportal\entity\EmployerProfile.class
 com\jobportal\service\EmailService.class
 com\jobportal\entity\JobPost.class
 com\jobportal\controller\AdminController$StatisticsResponse.class

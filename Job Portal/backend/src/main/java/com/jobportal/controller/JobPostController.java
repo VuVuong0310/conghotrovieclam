@@ -30,8 +30,8 @@ public class JobPostController {
 
     @GetMapping
     public List<JobPost> listAll() {
-        // Only return APPROVED jobs for public listing
-        return jobPostRepository.findByStatus(JobPost.JobStatus.APPROVED);
+        // Only return APPROVED and active jobs for public listing
+        return jobPostRepository.findByStatusAndActive(JobPost.JobStatus.APPROVED, true);
     }
 
     @GetMapping("/{id}")

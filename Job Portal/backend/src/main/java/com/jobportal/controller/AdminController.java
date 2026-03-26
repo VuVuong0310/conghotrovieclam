@@ -142,6 +142,19 @@ public class AdminController {
         return ResponseEntity.ok(stats);
     }
 
+    @PutMapping("/jobs/{jobId}/toggle-active")
+    public ResponseEntity<?> toggleJobActive(@PathVariable Long jobId) {
+        Optional<JobPost> jobOpt = jobPostRepository.findById(jobId);
+        if (jobOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Job not found"));
+        }
+        JobPost job = jobOpt.get();
+        job.setActive(!job.isActive());
+        jobPostRepository.save(job);
+        String status = job.isActive() ? "bật" : "tắt";
+        return ResponseEntity.ok(new MessageResponse("Đã " + status + " tin tuyển dụng: " + job.getTitle()));
+    }
+
     @PostMapping("/jobs/{jobId}/approve")
     public ResponseEntity<?> approveJobPost(@PathVariable Long jobId) {
         try {

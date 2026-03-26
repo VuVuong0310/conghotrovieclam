@@ -52,6 +52,9 @@ public class JobPost {
     @Column(columnDefinition = "TEXT")
     private String requirements;
 
+    @Column(nullable = false, columnDefinition = "bit(1) default 1")
+    private boolean active = true;
+
     // getters/setters
     public Long getId() {
         return id;
@@ -154,4 +157,7 @@ public class JobPost {
 
     public String getRequirements() { return requirements; }
     public void setRequirements(String requirements) { this.requirements = requirements; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }
