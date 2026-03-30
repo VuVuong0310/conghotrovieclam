@@ -166,13 +166,13 @@ function App() {
           <Route path="/change-password" element={isLoggedIn ? <ChangePassword /> : <Navigate to="/login" />} />
           <Route path="/jobs" element={<JobList />} />
           <Route path="/jobs-advanced" element={<JobListAdvanced />} />
-          <Route path="/recommendations" element={isLoggedIn ? <JobRecommendations /> : <Navigate to="/login" />} />
+          <Route path="/recommendations" element={isLoggedIn && isCandidate ? <JobRecommendations /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
           <Route path="/job/:id" element={<JobDetails />} />
-          <Route path="/create-job" element={isLoggedIn ? <CreateJob /> : <Navigate to="/login" />} />
-          <Route path="/profile/:userId" element={isLoggedIn ? <CandidateProfile /> : <Navigate to="/login" />} />
-          <Route path="/my-applications" element={isLoggedIn ? <MyApplications /> : <Navigate to="/login" />} />
-          <Route path="/employer-dashboard" element={isLoggedIn ? <EmployerDashboard /> : <Navigate to="/login" />} />
-          <Route path="/admin-dashboard" element={isLoggedIn ? <AdminDashboard /> : <Navigate to="/login" />} />
+          <Route path="/create-job" element={isLoggedIn && (isEmployer || isAdmin) ? <CreateJob /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
+          <Route path="/profile/:userId" element={isLoggedIn && isCandidate ? <CandidateProfile /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
+          <Route path="/my-applications" element={isLoggedIn && isCandidate ? <MyApplications /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
+          <Route path="/employer-dashboard" element={isLoggedIn && isEmployer ? <EmployerDashboard /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
+          <Route path="/admin-dashboard" element={isLoggedIn && isAdmin ? <AdminDashboard /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
           <Route path="/" element={<Navigate to="/jobs" />} />
         </Routes>
       </div>

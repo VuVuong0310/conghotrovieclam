@@ -69,9 +69,11 @@ public class JobPostController {
         if (existing.isEmpty()) {
             return ResponseEntity.badRequest().body("Job not found");
         }
-        // Verify ownership
+        // Verify ownership (admin can edit any job)
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         Optional<User> employer = userRepository.findByUsername(auth.getName());
-        if (employer.isEmpty() || !existing.get().getEmployer().getId().equals(employer.get().getId())) {
+        if (!isAdmin && (employer.isEmpty() || !existing.get().getEmployer().getId().equals(employer.get().getId()))) {
             return ResponseEntity.status(403).body("Unauthorized");
         }
         job.setId(id);
@@ -82,15 +84,17 @@ public class JobPostController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_EMPLOYER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EMPLOYER', 'ROLE_ADMIN')")
     public ResponseEntity<?> delete(@PathVariable Long id, Authentication auth) {
         Optional<JobPost> existing = jobPostRepository.findById(id);
         if (existing.isEmpty()) {
             return ResponseEntity.badRequest().body("Job not found");
         }
-        // Verify ownership
+        // Verify ownership (admin can delete any job)
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         Optional<User> employer = userRepository.findByUsername(auth.getName());
-        if (employer.isEmpty() || !existing.get().getEmployer().getId().equals(employer.get().getId())) {
+        if (!isAdmin && (employer.isEmpty() || !existing.get().getEmployer().getId().equals(employer.get().getId()))) {
             return ResponseEntity.status(403).body("Unauthorized");
         }
         jobPostRepository.deleteById(id);
