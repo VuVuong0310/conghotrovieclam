@@ -39,60 +39,23 @@ function GoogleCallback() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        gap: '1rem'
-      }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          border: '4px solid #e5e7eb',
-          borderTop: '4px solid #2563eb',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <p style={{ color: '#6b7280', fontSize: '1.1rem' }}>Đang xử lý đăng nhập Google...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="jp-loading-page">
+        <div className="jp-spinner"></div>
+        <p className="text-muted mt-3">Đang xử lý đăng nhập Google...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        gap: '1rem'
-      }}>
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '2rem',
-          maxWidth: '400px',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#dc2626', fontWeight: '600', marginBottom: '1rem' }}>{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            style={{
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            Quay lại trang đăng nhập
+      <div className="jp-auth-wrapper">
+        <div className="jp-auth-card text-center" style={{ maxWidth: 400 }}>
+          <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mb-3" style={{ width: 64, height: 64 }}>
+            <i className="bi bi-exclamation-triangle fs-2 text-danger"></i>
+          </div>
+          <p className="text-danger fw-semibold mb-3">{error}</p>
+          <button className="btn btn-primary" onClick={() => navigate('/login')}>
+            <i className="bi bi-arrow-left me-1"></i>Quay lại trang đăng nhập
           </button>
         </div>
       </div>

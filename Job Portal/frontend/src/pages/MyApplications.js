@@ -22,444 +22,134 @@ function MyApplications() {
       setLoading(true);
       const response = await JobApplicationService.getMyApplications(currentPage, 10);
       const data = response.data;
-
-      if (data.content) {
-        setApplications(data.content);
-        setTotalPages(data.totalPages || 0);
-      } else {
-        setApplications(data);
-        setTotalPages(1);
-      }
-
+      if (data.content) { setApplications(data.content); setTotalPages(data.totalPages || 0); }
+      else { setApplications(data); setTotalPages(1); }
       setLoading(false);
-    } catch (err) {
-      setError('Không thể tải danh sách ứng tuyển');
-      setLoading(false);
-    }
+    } catch (err) { setError('Không thể tải danh sách ứng tuyển'); setLoading(false); }
   };
 
   const fetchStats = async () => {
-    try {
-      const response = await JobApplicationService.getApplicationStats();
-      setStats(response.data);
-    } catch (err) {
-      // Stats not critical, ignore error
-    }
+    try { const response = await JobApplicationService.getApplicationStats(); setStats(response.data); } catch (err) {}
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'SUBMITTED':
-        return 'var(--info-color)';
-      case 'REVIEWING':
-        return 'var(--warning-color)';
-      case 'INTERVIEW':
-        return 'var(--primary-color)';
-      case 'ACCEPTED':
-        return 'var(--success-color)';
-      case 'REJECTED':
-        return 'var(--error-color)';
-      case 'WITHDRAWN':
-        return 'var(--text-secondary)';
-      default:
-        return 'var(--border-color)';
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    const labels = {
-      'SUBMITTED': '📝 Đã nộp',
-      'REVIEWING': '👁️ Đang xem xét',
-      'INTERVIEW': '🎤 Mời phỏng vấn',
-      'ACCEPTED': '✅ Chấp nhận',
-      'REJECTED': '❌ Từ chối',
-      'WITHDRAWN': '🔙 Đã rút lại'
+  const getStatusBadge = (status) => {
+    const map = {
+      'SUBMITTED': { cls: 'jp-badge-info', icon: 'bi-send', label: 'Đã nộp' },
+      'REVIEWING': { cls: 'jp-badge-warning', icon: 'bi-eye', label: 'Đang xem xét' },
+      'INTERVIEW': { cls: 'jp-badge-primary', icon: 'bi-mic', label: 'Mời phỏng vấn' },
+      'ACCEPTED': { cls: 'jp-badge-success', icon: 'bi-check-circle', label: 'Chấp nhận' },
+      'REJECTED': { cls: 'jp-badge-danger', icon: 'bi-x-circle', label: 'Từ chối' },
+      'WITHDRAWN': { cls: 'jp-badge-secondary', icon: 'bi-arrow-counterclockwise', label: 'Đã rút lại' },
     };
-    return labels[status] || status;
+    const s = map[status] || { cls: 'jp-badge-secondary', icon: 'bi-circle', label: status };
+    return <span className={`jp-badge ${s.cls}`}><i className={`bi ${s.icon}`}></i> {s.label}</span>;
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'SUBMITTED':
-        return '📝';
-      case 'REVIEWING':
-        return '👁️';
-      case 'INTERVIEW':
-        return '🎤';
-      case 'ACCEPTED':
-        return '🎉';
-      case 'REJECTED':
-        return '😔';
-      case 'WITHDRAWN':
-        return '🔙';
-      default:
-        return '📄';
-    }
-  };
+  const filteredApplications = filter === 'ALL' ? applications : applications.filter(app => app.status === filter);
 
-  const filteredApplications = filter === 'ALL'
-    ? applications
-    : applications.filter(app => app.status === filter);
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
   const formatSalary = (salary) => {
     if (!salary) return 'Thỏa thuận';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0
-    }).format(salary);
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 }).format(salary);
   };
 
   const handleWithdraw = async (applicationId) => {
     if (window.confirm('Bạn có chắc muốn rút lại đơn ứng tuyển này?')) {
-      try {
-        await JobApplicationService.withdrawApplication(applicationId);
-        fetchApplications(); // Refresh list
-        alert('Đã rút lại đơn ứng tuyển thành công');
-      } catch (err) {
-        alert('Không thể rút lại đơn ứng tuyển');
-      }
+      try { await JobApplicationService.withdrawApplication(applicationId); fetchApplications(); } catch (err) { alert('Không thể rút lại đơn ứng tuyển'); }
     }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page) => setCurrentPage(page);
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="text-center" style={{ padding: '4rem 0' }}>
-          <div className="loading" style={{ width: '60px', height: '60px', margin: '0 auto 1rem' }}></div>
-          <p>Đang tải danh sách ứng tuyển...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="jp-loading-page"><div className="jp-spinner"></div><p>Đang tải danh sách ứng tuyển...</p></div>;
 
   return (
-    <div className="container" style={{
-      animation: 'fadeIn 0.6s ease-out'
-    }}>
-      <div style={{
-        background: 'linear-gradient(135deg, var(--primary-color), var(--primary-hover))',
-        color: 'white',
-        padding: '2rem',
-        borderRadius: 'var(--border-radius)',
-        marginBottom: '2rem',
-        animation: 'slideInScale 0.6s ease-out'
-      }}>
-        <h1 style={{ marginBottom: '0.5rem', textAlign: 'center' }}>
-          📋 Đơn Ứng Tuyển Của Tôi
-        </h1>
-        <p style={{ textAlign: 'center', opacity: 0.9 }}>
-          Theo dõi trạng thái các đơn ứng tuyển của bạn
-        </p>
+    <div className="jp-container">
+      <div className="jp-page-header">
+        <h1><i className="bi bi-file-earmark-text me-2"></i>Đơn Ứng Tuyển Của Tôi</h1>
+        <p>Theo dõi trạng thái các đơn ứng tuyển của bạn</p>
       </div>
 
-      {error && (
-        <div className="alert alert-danger" style={{
-          animation: 'shake 0.5s ease-in-out',
-          marginBottom: '2rem'
-        }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alert alert-danger"><i className="bi bi-exclamation-triangle me-2"></i>{error}</div>}
 
-      {/* Stats Cards */}
+      {/* Stats */}
       {stats && (
-        <div className="stats-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '1rem',
-          marginBottom: '2rem',
-          animation: 'slideInUp 0.8s ease-out'
-        }}>
-          <div className="stat-card" style={{
-            backgroundColor: 'var(--card-bg)',
-            padding: '1.5rem',
-            borderRadius: 'var(--border-radius)',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow)'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📝</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-              {stats.totalApplications || 0}
+        <div className="row g-3 mb-4">
+          {[
+            { icon: 'bi-send', label: 'Tổng đơn', value: stats.totalApplications || 0, bg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
+            { icon: 'bi-mic', label: 'Mời phỏng vấn', value: stats.interviewCount || 0, bg: 'linear-gradient(135deg,#f59e0b,#d97706)' },
+            { icon: 'bi-check-circle', label: 'Được chấp nhận', value: stats.acceptedCount || 0, bg: 'linear-gradient(135deg,#10b981,#059669)' },
+            { icon: 'bi-graph-up', label: 'Tỷ lệ thành công', value: `${stats.successRate ? Math.round(stats.successRate * 100) : 0}%`, bg: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' },
+          ].map((s, i) => (
+            <div key={i} className="col-6 col-md-3">
+              <div className="jp-stat-card" style={{ background: s.bg }}>
+                <div className="stat-icon"><i className={`bi ${s.icon}`}></i></div>
+                <div className="stat-value">{s.value}</div>
+                <div className="stat-label">{s.label}</div>
+              </div>
             </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Tổng đơn
-            </div>
-          </div>
-
-          <div className="stat-card" style={{
-            backgroundColor: 'var(--card-bg)',
-            padding: '1.5rem',
-            borderRadius: 'var(--border-radius)',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow)'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎤</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--warning-color)' }}>
-              {stats.interviewCount || 0}
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Mời phỏng vấn
-            </div>
-          </div>
-
-          <div className="stat-card" style={{
-            backgroundColor: 'var(--card-bg)',
-            padding: '1.5rem',
-            borderRadius: 'var(--border-radius)',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow)'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success-color)' }}>
-              {stats.acceptedCount || 0}
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Được chấp nhận
-            </div>
-          </div>
-
-          <div className="stat-card" style={{
-            backgroundColor: 'var(--card-bg)',
-            padding: '1.5rem',
-            borderRadius: 'var(--border-radius)',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow)'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📈</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--info-color)' }}>
-              {stats.successRate ? Math.round(stats.successRate * 100) : 0}%
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Tỷ lệ thành công
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
       {/* Filter */}
-      <div className="filter-section" style={{
-        backgroundColor: 'var(--card-bg)',
-        padding: '1.5rem',
-        borderRadius: 'var(--border-radius)',
-        marginBottom: '2rem',
-        boxShadow: 'var(--shadow)',
-        animation: 'slideInLeft 0.7s ease-out'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <label style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
-            🔍 Lọc theo trạng thái:
-          </label>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="form-control"
-            style={{
-              padding: '0.5rem 1rem',
-              border: '2px solid var(--border-color)',
-              borderRadius: 'var(--border-radius)',
-              backgroundColor: 'var(--bg-color)',
-              minWidth: '200px'
-            }}
-          >
-            <option value="ALL">🎯 Tất cả trạng thái</option>
-            <option value="SUBMITTED">📝 Đã nộp</option>
-            <option value="REVIEWING">👁️ Đang xem xét</option>
-            <option value="INTERVIEW">🎤 Mời phỏng vấn</option>
-            <option value="ACCEPTED">✅ Chấp nhận</option>
-            <option value="REJECTED">❌ Từ chối</option>
-            <option value="WITHDRAWN">🔙 Đã rút lại</option>
+      <div className="jp-card mb-4">
+        <div className="jp-card-body d-flex align-items-center gap-3 flex-wrap py-3">
+          <label className="fw-semibold text-nowrap"><i className="bi bi-funnel me-1"></i>Lọc trạng thái:</label>
+          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="form-select" style={{ maxWidth: 220 }}>
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="SUBMITTED">Đã nộp</option>
+            <option value="REVIEWING">Đang xem xét</option>
+            <option value="INTERVIEW">Mời phỏng vấn</option>
+            <option value="ACCEPTED">Chấp nhận</option>
+            <option value="REJECTED">Từ chối</option>
+            <option value="WITHDRAWN">Đã rút lại</option>
           </select>
         </div>
       </div>
 
-      {/* Applications List */}
+      {/* Applications */}
       {filteredApplications.length === 0 ? (
-        <div className="empty-state" style={{
-          textAlign: 'center',
-          padding: '4rem 2rem',
-          backgroundColor: 'var(--card-bg)',
-          borderRadius: 'var(--border-radius)',
-          boxShadow: 'var(--shadow)',
-          animation: 'slideInScale 0.6s ease-out'
-        }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📄</div>
-          <h3 style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            {filter === 'ALL' ? 'Bạn chưa ứng tuyển công việc nào' : 'Không có đơn ứng tuyển nào với trạng thái này'}
-          </h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            Hãy bắt đầu tìm kiếm và ứng tuyển các công việc phù hợp với bạn!
-          </p>
-          <button
-            onClick={() => navigate('/jobs')}
-            className="btn btn-primary"
-            style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}
-          >
-            🔍 Tìm việc ngay
-          </button>
+        <div className="jp-card">
+          <div className="jp-empty-state">
+            <i className="bi bi-inbox"></i>
+            <h3>{filter === 'ALL' ? 'Bạn chưa ứng tuyển công việc nào' : 'Không có đơn với trạng thái này'}</h3>
+            <p>Hãy bắt đầu tìm kiếm và ứng tuyển các công việc phù hợp!</p>
+            <button onClick={() => navigate('/jobs')} className="btn btn-primary"><i className="bi bi-search me-1"></i>Tìm việc ngay</button>
+          </div>
         </div>
       ) : (
-        <div className="applications-list" style={{
-          display: 'grid',
-          gap: '1.5rem',
-          animation: 'fadeInUp 0.8s ease-out'
-        }}>
-          {filteredApplications.map((app, index) => (
-            <div
-              key={app.id}
-              className="application-card"
-              style={{
-                backgroundColor: 'var(--card-bg)',
-                borderRadius: 'var(--border-radius)',
-                boxShadow: 'var(--shadow)',
-                overflow: 'hidden',
-                animationDelay: `${index * 0.1}s`,
-                borderLeft: `4px solid ${getStatusColor(app.status)}`
-              }}
-            >
-              <div style={{
-                padding: '1.5rem',
-                borderBottom: '1px solid var(--border-color)',
-                background: `linear-gradient(90deg, ${getStatusColor(app.status)}15, transparent)`
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="d-flex flex-column gap-3">
+          {filteredApplications.map((app) => (
+            <div key={app.id} className="jp-card" style={{ borderLeft: '4px solid' }}>
+              <div className="jp-card-body">
+                <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                   <div>
-                    <h3 style={{
-                      marginBottom: '0.5rem',
-                      color: 'var(--primary-color)',
-                      fontSize: '1.3rem'
-                    }}>
-                      {app.jobPost?.title || 'Công việc'}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                      <span>🏢 {app.jobPost?.companyName || app.jobPost?.employer?.username || 'Công ty'}</span>
-                      <span>📍 {app.jobPost?.location || 'Việt Nam'}</span>
-                      <span>💰 {formatSalary(app.jobPost?.salary)}</span>
+                    <h6 className="fw-bold mb-1" style={{ color: 'var(--jp-primary)' }}>{app.jobPost?.title || 'Công việc'}</h6>
+                    <div className="d-flex flex-wrap gap-3 text-muted" style={{ fontSize: '.85rem' }}>
+                      <span><i className="bi bi-building me-1"></i>{app.jobPost?.companyName || app.jobPost?.employer?.username || 'Công ty'}</span>
+                      <span><i className="bi bi-geo-alt me-1"></i>{app.jobPost?.location || 'Việt Nam'}</span>
+                      <span><i className="bi bi-cash-stack me-1"></i>{formatSalary(app.jobPost?.salary)}</span>
                     </div>
                   </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      backgroundColor: getStatusColor(app.status),
-                      color: 'white',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '20px',
-                      fontSize: '0.9rem',
-                      fontWeight: '500'
-                    }}>
-                      <span>{getStatusIcon(app.status)}</span>
-                      <span>{getStatusLabel(app.status)}</span>
-                    </div>
-                    <p style={{
-                      margin: '0.5rem 0 0',
-                      fontSize: '0.8rem',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      📅 {formatDate(app.appliedAt)}
-                    </p>
+                  <div className="text-end">
+                    {getStatusBadge(app.status)}
+                    <div className="text-muted mt-1" style={{ fontSize: '.78rem' }}><i className="bi bi-calendar3 me-1"></i>{formatDate(app.appliedAt)}</div>
                   </div>
                 </div>
-              </div>
 
-              <div style={{ padding: '1.5rem' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <p style={{
-                    color: 'var(--text-secondary)',
-                    lineHeight: '1.6',
-                    marginBottom: '1rem'
-                  }}>
-                    {app.jobPost?.description?.substring(0, 200) || 'Mô tả công việc sẽ được cập nhật...'}
-                    {app.jobPost?.description?.length > 200 && '...'}
-                  </p>
-                </div>
+                <p className="text-muted mb-3" style={{ fontSize: '.88rem' }}>
+                  {app.jobPost?.description?.substring(0, 200) || 'Mô tả công việc sẽ được cập nhật...'}{app.jobPost?.description?.length > 200 && '...'}
+                </p>
 
-                {/* Status-specific messages */}
-                {app.status === 'INTERVIEW' && (
-                  <div className="alert alert-success" style={{
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    border: '1px solid var(--success-color)',
-                    color: 'var(--success-color)',
-                    borderRadius: 'var(--border-radius)',
-                    padding: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    🎉 <strong>Chúc mừng!</strong> Bạn được mời phỏng vấn. Vui lòng kiểm tra email để biết chi tiết lịch phỏng vấn.
-                  </div>
-                )}
+                {app.status === 'INTERVIEW' && <div className="alert alert-success py-2 mb-3"><i className="bi bi-trophy me-2"></i><strong>Chúc mừng!</strong> Bạn được mời phỏng vấn. Kiểm tra email để biết chi tiết.</div>}
+                {app.status === 'ACCEPTED' && <div className="alert alert-success py-2 mb-3"><i className="bi bi-stars me-2"></i><strong>Xin chúc mừng!</strong> Bạn đã được chấp nhận.</div>}
+                {app.status === 'REJECTED' && <div className="alert alert-danger py-2 mb-3"><i className="bi bi-info-circle me-2"></i>Rất tiếc, đơn ứng tuyển không được chấp nhận. Hãy thử các công việc khác.</div>}
 
-                {app.status === 'ACCEPTED' && (
-                  <div className="alert alert-success" style={{
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    border: '1px solid var(--success-color)',
-                    color: 'var(--success-color)',
-                    borderRadius: 'var(--border-radius)',
-                    padding: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    🎊 <strong>Xin chúc mừng!</strong> Bạn đã được chấp nhận. Hãy liên hệ công ty để làm các thủ tục tiếp theo.
-                  </div>
-                )}
-
-                {app.status === 'REJECTED' && (
-                  <div className="alert alert-danger" style={{
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    border: '1px solid var(--error-color)',
-                    color: 'var(--error-color)',
-                    borderRadius: 'var(--border-radius)',
-                    padding: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    😔 Rất tiếc, đơn ứng tuyển của bạn không được chấp nhận. Hãy thử ứng tuyển các công việc khác phù hợp hơn.
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => navigate(`/job/${app.jobPost?.id}`)}
-                    className="btn"
-                    style={{
-                      backgroundColor: 'var(--primary-color)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: 'var(--border-radius)',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    👁️ Xem chi tiết
-                  </button>
-
+                <div className="d-flex gap-2">
+                  <button onClick={() => navigate(`/job/${app.jobPost?.id}`)} className="btn btn-primary btn-sm"><i className="bi bi-eye me-1"></i>Xem chi tiết</button>
                   {(app.status === 'SUBMITTED' || app.status === 'REVIEWING') && (
-                    <button
-                      onClick={() => handleWithdraw(app.id)}
-                      className="btn"
-                      style={{
-                        backgroundColor: 'var(--error-color)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.5rem 1rem',
-                        borderRadius: 'var(--border-radius)',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      🔙 Rút lại
-                    </button>
+                    <button onClick={() => handleWithdraw(app.id)} className="btn btn-outline-danger btn-sm"><i className="bi bi-arrow-counterclockwise me-1"></i>Rút lại</button>
                   )}
                 </div>
               </div>
@@ -470,55 +160,16 @@ function MyApplications() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          marginTop: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-            className="btn"
-            style={{
-              backgroundColor: currentPage === 0 ? 'var(--border-color)' : 'var(--primary-color)',
-              color: currentPage === 0 ? 'var(--text-secondary)' : 'white'
-            }}
-          >
-            ← Trước
-          </button>
-
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const pageNum = Math.max(0, Math.min(totalPages - 1, currentPage - 2 + i));
-            return (
-              <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
-                className="btn"
-                style={{
-                  backgroundColor: pageNum === currentPage ? 'var(--primary-color)' : 'var(--border-color)',
-                  color: pageNum === currentPage ? 'white' : 'var(--text-primary)',
-                  minWidth: '40px'
-                }}
-              >
-                {pageNum + 1}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-            className="btn"
-            style={{
-              backgroundColor: currentPage >= totalPages - 1 ? 'var(--border-color)' : 'var(--primary-color)',
-              color: currentPage >= totalPages - 1 ? 'var(--text-secondary)' : 'white'
-            }}
-          >
-            Sau →
-          </button>
-        </div>
+        <nav className="d-flex justify-content-center mt-4">
+          <ul className="pagination">
+            <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}><button className="page-link" onClick={() => handlePageChange(currentPage - 1)}><i className="bi bi-chevron-left"></i></button></li>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = Math.max(0, Math.min(totalPages - 1, currentPage - 2 + i));
+              return <li key={pageNum} className={`page-item ${pageNum === currentPage ? 'active' : ''}`}><button className="page-link" onClick={() => handlePageChange(pageNum)}>{pageNum + 1}</button></li>;
+            })}
+            <li className={`page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}`}><button className="page-link" onClick={() => handlePageChange(currentPage + 1)}><i className="bi bi-chevron-right"></i></button></li>
+          </ul>
+        </nav>
       )}
     </div>
   );

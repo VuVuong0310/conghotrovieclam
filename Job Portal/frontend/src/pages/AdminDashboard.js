@@ -3,21 +3,16 @@ import axios from 'axios';
 import AuthService from '../services/AuthService';
 import API_BASE from '../config/api';
 
-/* ── tiny bar-chart (pure CSS, no library needed) ── */
+/* ── tiny bar-chart (pure CSS) ── */
 function MiniBarChart({ data, colors, height = 160 }) {
   const max = Math.max(...data.map(d => d.value), 1);
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height, padding: '0 4px' }}>
+    <div className="d-flex align-items-end gap-1" style={{ height, padding: '0 4px' }}>
       {data.map((d, i) => (
-        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#374151' }}>{d.value}</span>
-          <div style={{
-            width: '100%', maxWidth: 48, borderRadius: 6,
-            height: `${Math.max((d.value / max) * (height - 30), 4)}px`,
-            background: colors[i % colors.length],
-            transition: 'height .4s ease'
-          }} />
-          <span style={{ fontSize: 10, color: '#6b7280', textAlign: 'center', lineHeight: 1.2 }}>{d.label}</span>
+        <div key={i} className="d-flex flex-column align-items-center gap-1" style={{ flex: 1 }}>
+          <span className="fw-bold small">{d.value}</span>
+          <div className="rounded" style={{ width: '100%', maxWidth: 48, height: `${Math.max((d.value / max) * (height - 30), 4)}px`, background: colors[i % colors.length], transition: 'height .4s ease' }} />
+          <span className="text-muted" style={{ fontSize: 10, textAlign: 'center', lineHeight: 1.2 }}>{d.label}</span>
         </div>
       ))}
     </div>
@@ -34,9 +29,7 @@ function DonutChart({ value, total, color = '#2563eb', size = 90 }) {
       <circle cx="45" cy="45" r={r} fill="none" stroke={color} strokeWidth="10"
         strokeDasharray={`${c * pct} ${c * (1 - pct)}`}
         strokeLinecap="round" transform="rotate(-90 45 45)" style={{ transition: 'stroke-dasharray .6s ease' }} />
-      <text x="45" y="49" textAnchor="middle" fontSize="18" fontWeight="700" fill="#1f2937">
-        {Math.round(pct * 100)}%
-      </text>
+      <text x="45" y="49" textAnchor="middle" fontSize="18" fontWeight="700" fill="#1f2937">{Math.round(pct * 100)}%</text>
     </svg>
   );
 }
@@ -55,125 +48,47 @@ function AdminDashboard() {
   const [editingJob, setEditingJob] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const authHeader = { headers: { 'Authorization': 'Bearer ' + AuthService.getToken() } };
+  const authHeader = { headers: { Authorization: 'Bearer ' + AuthService.getToken() } };
 
   const fetchStatistics = useCallback(async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/admin/statistics`, authHeader);
-      setStatistics(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch statistics', error);
-      setLoading(false);
-    }
+    try { const res = await axios.get(`${API_BASE}/admin/statistics`, authHeader); setStatistics(res.data); }
+    catch (e) { console.error('Failed to fetch statistics', e); }
+    setLoading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { fetchStatistics(); }, [fetchStatistics]);
 
-  const fetchPendingJobs = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/admin/jobs/pending`, authHeader);
-      setPendingJobs(res.data);
-    } catch (e) { console.error(e); }
-  };
-
-  const handleApproveJob = async (jobId) => {
-    try {
-      await axios.post(`${API_BASE}/admin/jobs/${jobId}/approve`, {}, authHeader);
-      fetchPendingJobs(); fetchStatistics();
-    } catch (e) { alert('Lỗi khi phê duyệt'); }
-  };
-
-  const handleRejectJob = async (jobId) => {
-    const reason = prompt('Lý do từ chối:');
-    if (!reason) return;
-    try {
-      await axios.post(`${API_BASE}/admin/jobs/${jobId}/reject`, { reason }, authHeader);
-      fetchPendingJobs(); fetchStatistics();
-    } catch (e) { alert('Lỗi khi từ chối'); }
-  };
-
-  const fetchCategories = async () => {
-    try { const r = await axios.get(`${API_BASE}/admin/categories`, authHeader); setCategories(r.data); }
-    catch (e) { console.error(e); }
-  };
-
+  const fetchPendingJobs = async () => { try { const r = await axios.get(`${API_BASE}/admin/jobs/pending`, authHeader); setPendingJobs(r.data); } catch (e) { console.error(e); } };
+  const handleApproveJob = async (jobId) => { try { await axios.post(`${API_BASE}/admin/jobs/${jobId}/approve`, {}, authHeader); fetchPendingJobs(); fetchStatistics(); } catch (e) { alert('Lỗi khi phê duyệt'); } };
+  const handleRejectJob = async (jobId) => { const reason = prompt('Lý do từ chối:'); if (!reason) return; try { await axios.post(`${API_BASE}/admin/jobs/${jobId}/reject`, { reason }, authHeader); fetchPendingJobs(); fetchStatistics(); } catch (e) { alert('Lỗi khi từ chối'); } };
+  const fetchCategories = async () => { try { const r = await axios.get(`${API_BASE}/admin/categories`, authHeader); setCategories(r.data); } catch (e) { console.error(e); } };
   const handleCatSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingCatId) {
-        await axios.put(`${API_BASE}/admin/categories/${editingCatId}`, catForm, authHeader);
-        setEditingCatId(null);
-      } else {
-        await axios.post(`${API_BASE}/admin/categories`, catForm, authHeader);
-      }
+      if (editingCatId) { await axios.put(`${API_BASE}/admin/categories/${editingCatId}`, catForm, authHeader); setEditingCatId(null); }
+      else { await axios.post(`${API_BASE}/admin/categories`, catForm, authHeader); }
       setCatForm({ name: '', description: '' }); fetchCategories();
     } catch (e) { alert('Lỗi khi lưu danh mục'); }
   };
-
   const handleEditCat = (cat) => { setEditingCatId(cat.id); setCatForm({ name: cat.name, description: cat.description || '' }); };
-
-  const handleDeleteCat = async (id) => {
-    if (!window.confirm('Xóa danh mục này?')) return;
-    try { await axios.delete(`${API_BASE}/admin/categories/${id}`, authHeader); fetchCategories(); }
-    catch (e) { alert('Lỗi khi xóa'); }
-  };
-
-  const fetchUsers = async () => {
-    try { const r = await axios.get(`${API_BASE}/admin/users`, authHeader); setUsers(r.data); }
-    catch (e) { console.error(e); }
-  };
-
-  const handleToggleLock = async (userId) => {
-    try { await axios.put(`${API_BASE}/admin/users/${userId}/toggle-lock`, {}, authHeader); fetchUsers(); fetchStatistics(); }
-    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
-  const handleDeleteUser = async (userId, username) => {
-    if (!window.confirm(`Xóa tài khoản "${username}"?`)) return;
-    try { await axios.delete(`${API_BASE}/admin/users/${userId}`, authHeader); fetchUsers(); fetchStatistics(); }
-    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
-  const fetchAllJobs = async () => {
-    try { const r = await axios.get(`${API_BASE}/admin/jobs`, authHeader); setAllJobs(r.data); }
-    catch (e) { console.error(e); }
-  };
-
-  const handleDeleteJob = async (jobId) => {
-    if (!window.confirm('Xóa tin tuyển dụng này?')) return;
-    try { await axios.delete(`${API_BASE}/admin/jobs/${jobId}`, authHeader); fetchAllJobs(); fetchStatistics(); }
-    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
-  const handleUpdateJob = async (jobId) => {
-    if (!editingJob) return;
-    try {
-      await axios.put(`${API_BASE}/admin/jobs/${jobId}`, editingJob, authHeader);
-      setEditingJob(null); fetchAllJobs(); fetchStatistics();
-    } catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
-  const handleChangeJobStatus = async (jobId, newStatus) => {
-    try { await axios.put(`${API_BASE}/admin/jobs/${jobId}`, { status: newStatus }, authHeader); fetchAllJobs(); fetchStatistics(); }
-    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
-  const handleToggleActive = async (jobId) => {
-    try { await axios.put(`${API_BASE}/admin/jobs/${jobId}/toggle-active`, {}, authHeader); fetchAllJobs(); }
-    catch (e) { alert(e.response?.data?.message || 'Lỗi'); }
-  };
-
+  const handleDeleteCat = async (id) => { if (!window.confirm('Xóa danh mục này?')) return; try { await axios.delete(`${API_BASE}/admin/categories/${id}`, authHeader); fetchCategories(); } catch (e) { alert('Lỗi khi xóa'); } };
+  const fetchUsers = async () => { try { const r = await axios.get(`${API_BASE}/admin/users`, authHeader); setUsers(r.data); } catch (e) { console.error(e); } };
+  const handleToggleLock = async (userId) => { try { await axios.put(`${API_BASE}/admin/users/${userId}/toggle-lock`, {}, authHeader); fetchUsers(); fetchStatistics(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
+  const handleDeleteUser = async (userId, username) => { if (!window.confirm(`Xóa tài khoản "${username}"?`)) return; try { await axios.delete(`${API_BASE}/admin/users/${userId}`, authHeader); fetchUsers(); fetchStatistics(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
+  const fetchAllJobs = async () => { try { const r = await axios.get(`${API_BASE}/admin/jobs`, authHeader); setAllJobs(r.data); } catch (e) { console.error(e); } };
+  const handleDeleteJob = async (jobId) => { if (!window.confirm('Xóa tin tuyển dụng này?')) return; try { await axios.delete(`${API_BASE}/admin/jobs/${jobId}`, authHeader); fetchAllJobs(); fetchStatistics(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
+  const handleUpdateJob = async (jobId) => { if (!editingJob) return; try { await axios.put(`${API_BASE}/admin/jobs/${jobId}`, editingJob, authHeader); setEditingJob(null); fetchAllJobs(); fetchStatistics(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
+  const handleChangeJobStatus = async (jobId, newStatus) => { try { await axios.put(`${API_BASE}/admin/jobs/${jobId}`, { status: newStatus }, authHeader); fetchAllJobs(); fetchStatistics(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
+  const handleToggleActive = async (jobId) => { try { await axios.put(`${API_BASE}/admin/jobs/${jobId}/toggle-active`, {}, authHeader); fetchAllJobs(); } catch (e) { alert(e.response?.data?.message || 'Lỗi'); } };
   const filteredJobs = jobFilter === 'ALL' ? allJobs : allJobs.filter(j => j.status === jobFilter);
 
-  // sidebar navigation items
   const menuItems = [
-    { key: 'dashboard', icon: '📊', label: 'Tổng quan' },
-    { key: 'pending',   icon: '⏳', label: 'Duyệt tin' },
-    { key: 'jobs',      icon: '💼', label: 'Tin tuyển dụng' },
-    { key: 'users',     icon: '👥', label: 'Người dùng' },
-    { key: 'categories',icon: '📁', label: 'Danh mục' },
+    { key: 'dashboard', icon: 'bi-grid-1x2', label: 'Tổng quan' },
+    { key: 'pending', icon: 'bi-hourglass-split', label: 'Duyệt tin' },
+    { key: 'jobs', icon: 'bi-briefcase', label: 'Tin tuyển dụng' },
+    { key: 'users', icon: 'bi-people', label: 'Người dùng' },
+    { key: 'categories', icon: 'bi-folder', label: 'Danh mục' }
   ];
 
   const handleMenuClick = (key) => {
@@ -184,56 +99,7 @@ function AdminDashboard() {
     if (key === 'categories') fetchCategories();
   };
 
-  /* ═══════════ styles ═══════════ */
-  const S = {
-    wrapper: { display: 'flex', minHeight: 'calc(100vh - 52px)', background: '#f0f2f5' },
-    sidebar: {
-      width: sidebarOpen ? 240 : 64, background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
-      color: '#fff', transition: 'width .25s ease', overflow: 'hidden', flexShrink: 0,
-      display: 'flex', flexDirection: 'column', position: 'sticky', top: 52, height: 'calc(100vh - 52px)'
-    },
-    sidebarHeader: {
-      padding: '20px 16px 12px', borderBottom: '1px solid rgba(255,255,255,.08)',
-      display: 'flex', alignItems: 'center', gap: 12, whiteSpace: 'nowrap'
-    },
-    sidebarLogo: { width: 36, height: 36, borderRadius: 10, background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 },
-    menuItem: (active) => ({
-      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer',
-      background: active ? 'rgba(59,130,246,.2)' : 'transparent', borderLeft: active ? '3px solid #3b82f6' : '3px solid transparent',
-      color: active ? '#93c5fd' : '#94a3b8', fontWeight: active ? 600 : 400, fontSize: 14,
-      transition: 'all .15s', whiteSpace: 'nowrap'
-    }),
-    toggleBtn: {
-      margin: '8px 16px', padding: '6px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)',
-      color: '#94a3b8', borderRadius: 6, cursor: 'pointer', fontSize: 16, textAlign: 'center'
-    },
-    main: { flex: 1, padding: '24px 28px', overflow: 'auto' },
-    pageTitle: { fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
-    grid4: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 },
-    statCard: (gradient) => ({
-      background: gradient, borderRadius: 14, padding: '22px 20px', color: '#fff', position: 'relative', overflow: 'hidden',
-      boxShadow: '0 4px 14px rgba(0,0,0,.1)'
-    }),
-    statIcon: { position: 'absolute', top: 14, right: 16, fontSize: 32, opacity: 0.25 },
-    statVal: { fontSize: 28, fontWeight: 800, lineHeight: 1 },
-    statLbl: { fontSize: 13, marginTop: 6, opacity: 0.9 },
-    card: { background: '#fff', borderRadius: 14, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,.06)', marginBottom: 20, border: '1px solid #e5e7eb' },
-    cardTitle: { fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 },
-    badge: (bg, color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color }),
-    tblAction: { display: 'flex', gap: 6, flexWrap: 'wrap' },
-    actionBtn: (bg) => ({ padding: '5px 10px', borderRadius: 6, border: 'none', background: bg, color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }),
-  };
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 48, height: 48, border: '4px solid #e5e7eb', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <p style={{ color: '#6b7280' }}>Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="jp-loading-page"><div className="jp-spinner"></div></div>;
 
   /* ═══════════ RENDER sections ═══════════ */
   const renderDashboard = () => {
@@ -244,68 +110,75 @@ function AdminDashboard() {
       { label: 'Xem xét', value: statistics.reviewingApplications },
       { label: 'PV', value: statistics.interviewApplications },
       { label: 'Nhận', value: statistics.acceptedApplications },
-      { label: 'Từ chối', value: statistics.rejectedApplications },
+      { label: 'Từ chối', value: statistics.rejectedApplications }
     ];
     const chartColors = ['#6b7280', '#0891b2', '#eab308', '#16a34a', '#dc2626'];
 
     return (
       <>
         {/* KPI cards */}
-        <div style={S.grid4}>
+        <div className="row g-3 mb-4">
           {[
-            { gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', icon: '👥', val: statistics.totalUsers, lbl: 'Tổng người dùng' },
-            { gradient: 'linear-gradient(135deg, #10b981, #059669)', icon: '👤', val: statistics.totalCandidates, lbl: 'Ứng viên' },
-            { gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', icon: '🏢', val: statistics.totalEmployers, lbl: 'Nhà tuyển dụng' },
-            { gradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', icon: '💼', val: statistics.totalJobs, lbl: 'Tin tuyển dụng' },
-            { gradient: 'linear-gradient(135deg, #ec4899, #db2777)', icon: '📄', val: statistics.totalApplications, lbl: 'Tổng đơn ứng tuyển' },
+            { gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', icon: 'bi-people', val: statistics.totalUsers, lbl: 'Tổng người dùng' },
+            { gradient: 'linear-gradient(135deg, #10b981, #059669)', icon: 'bi-person', val: statistics.totalCandidates, lbl: 'Ứng viên' },
+            { gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', icon: 'bi-building', val: statistics.totalEmployers, lbl: 'Nhà tuyển dụng' },
+            { gradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', icon: 'bi-briefcase', val: statistics.totalJobs, lbl: 'Tin tuyển dụng' },
+            { gradient: 'linear-gradient(135deg, #ec4899, #db2777)', icon: 'bi-file-earmark-text', val: statistics.totalApplications, lbl: 'Tổng đơn ứng tuyển' }
           ].map((c, i) => (
-            <div key={i} style={S.statCard(c.gradient)}>
-              <span style={S.statIcon}>{c.icon}</span>
-              <div style={S.statVal}>{c.val}</div>
-              <div style={S.statLbl}>{c.lbl}</div>
+            <div className="col" key={i}>
+              <div className="jp-stat-card" style={{ background: c.gradient }}>
+                <i className={`bi ${c.icon}`} style={{ fontSize: 28, opacity: 0.25, position: 'absolute', top: 14, right: 16 }}></i>
+                <div className="fw-bold" style={{ fontSize: 28 }}>{c.val}</div>
+                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>{c.lbl}</div>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Charts row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
-          <div style={S.card}>
-            <div style={S.cardTitle}>📊 Thống kê đơn ứng tuyển</div>
-            <MiniBarChart data={chartData} colors={chartColors} height={180} />
-          </div>
-          <div style={S.card}>
-            <div style={S.cardTitle}>🎯 Tỷ lệ chấp nhận</div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingTop: 8 }}>
-              <DonutChart value={statistics.acceptedApplications} total={appTotal} color="#16a34a" size={110} />
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{statistics.acceptedApplications} / {statistics.totalApplications}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Đã chấp nhận</div>
+        <div className="row g-3 mb-4">
+          <div className="col-lg-8">
+            <div className="jp-card h-100">
+              <div className="jp-card-body">
+                <h6 className="jp-section-title"><i className="bi bi-bar-chart me-2"></i>Thống kê đơn ứng tuyển</h6>
+                <MiniBarChart data={chartData} colors={chartColors} height={180} />
               </div>
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                {chartData.map((d, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: chartColors[i], flexShrink: 0 }} />
-                    <span style={{ flex: 1, color: '#6b7280' }}>{d.label}</span>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>{d.value}</span>
-                  </div>
-                ))}
+            </div>
+          </div>
+          <div className="col-lg-4">
+            <div className="jp-card h-100">
+              <div className="jp-card-body text-center">
+                <h6 className="jp-section-title"><i className="bi bi-bullseye me-2"></i>Tỷ lệ chấp nhận</h6>
+                <DonutChart value={statistics.acceptedApplications} total={appTotal} color="#16a34a" size={110} />
+                <div className="fw-semibold mt-2">{statistics.acceptedApplications} / {statistics.totalApplications}</div>
+                <small className="text-muted">Đã chấp nhận</small>
+                <div className="d-flex flex-column gap-1 mt-3">
+                  {chartData.map((d, i) => (
+                    <div key={i} className="d-flex align-items-center gap-2 small">
+                      <span className="rounded-circle" style={{ width: 10, height: 10, background: chartColors[i], flexShrink: 0 }}></span>
+                      <span className="text-muted flex-grow-1">{d.label}</span>
+                      <span className="fw-semibold">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick actions */}
-        <div style={S.card}>
-          <div style={S.cardTitle}>⚡ Thao tác nhanh</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            {menuItems.filter(m => m.key !== 'dashboard').map(m => (
-              <button key={m.key} onClick={() => handleMenuClick(m.key)}
-                style={{ padding: '14px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, color: '#374151', transition: 'all .15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#eff6ff'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = '#fff'; }}>
-                <span style={{ fontSize: 20 }}>{m.icon}</span> {m.label}
-              </button>
-            ))}
+        <div className="jp-card">
+          <div className="jp-card-body">
+            <h6 className="jp-section-title"><i className="bi bi-lightning me-2"></i>Thao tác nhanh</h6>
+            <div className="row g-2">
+              {menuItems.filter(m => m.key !== 'dashboard').map(m => (
+                <div className="col-6 col-md-3" key={m.key}>
+                  <button className="btn btn-outline-primary w-100 py-3 fw-semibold" onClick={() => handleMenuClick(m.key)}>
+                    <i className={`bi ${m.icon} d-block fs-4 mb-1`}></i>{m.label}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </>
@@ -313,149 +186,184 @@ function AdminDashboard() {
   };
 
   const renderPendingJobs = () => (
-    <div style={S.card}>
-      <div style={S.cardTitle}>⏳ Tin tuyển dụng chờ duyệt</div>
-      {pendingJobs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#6b7280' }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>Không có tin nào chờ duyệt!</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {pendingJobs.map(job => (
-            <div key={job.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 10, border: '1px solid #e5e7eb', background: '#fefce8' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#1e293b', marginBottom: 4 }}>{job.title}</div>
-                <div style={{ fontSize: 13, color: '#6b7280', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  <span>🏢 {job.employer?.username || 'N/A'}</span>
-                  <span>📍 {job.location}</span>
-                  <span>📁 {job.category?.name || 'Chưa phân loại'}</span>
-                  <span>📅 {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : ''}</span>
+    <div className="jp-card">
+      <div className="jp-card-body">
+        <h5 className="fw-bold mb-3"><i className="bi bi-hourglass-split me-2 text-warning"></i>Tin tuyển dụng chờ duyệt</h5>
+        {pendingJobs.length === 0 ? (
+          <div className="jp-empty-state">
+            <i className="bi bi-check-circle"></i>
+            <h6>Không có tin nào chờ duyệt!</h6>
+          </div>
+        ) : (
+          <div className="d-flex flex-column gap-3">
+            {pendingJobs.map(job => (
+              <div key={job.id} className="border rounded-3 p-3 bg-warning bg-opacity-10">
+                <div className="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 className="fw-bold mb-1">{job.title}</h6>
+                    <div className="text-muted small d-flex gap-3 flex-wrap">
+                      <span><i className="bi bi-building me-1"></i>{job.employer?.username || 'N/A'}</span>
+                      <span><i className="bi bi-geo-alt me-1"></i>{job.location}</span>
+                      <span><i className="bi bi-folder me-1"></i>{job.category?.name || 'Chưa phân loại'}</span>
+                      <span><i className="bi bi-calendar3 me-1"></i>{job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : ''}</span>
+                    </div>
+                    {job.description && <p className="text-muted small mt-1 mb-0">{job.description.substring(0, 120)}...</p>}
+                  </div>
+                  <div className="d-flex gap-2 flex-shrink-0">
+                    <button className="btn btn-success btn-sm" onClick={() => handleApproveJob(job.id)}><i className="bi bi-check-lg me-1"></i>Duyệt</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleRejectJob(job.id)}><i className="bi bi-x-lg me-1"></i>Từ chối</button>
+                  </div>
                 </div>
-                {job.description && <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>{job.description.substring(0, 120)}...</div>}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <button onClick={() => handleApproveJob(job.id)} style={{ ...S.actionBtn('#16a34a'), padding: '8px 16px', fontSize: 13 }}>✅ Duyệt</button>
-                <button onClick={() => handleRejectJob(job.id)} style={{ ...S.actionBtn('#dc2626'), padding: '8px 16px', fontSize: 13 }}>❌ Từ chối</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
   const renderJobs = () => (
-    <div style={S.card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={S.cardTitle}>💼 Quản lý tin tuyển dụng</div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map(f => (
-            <button key={f} onClick={() => setJobFilter(f)}
-              style={{ padding: '6px 14px', borderRadius: 20, border: jobFilter === f ? 'none' : '1px solid #d1d5db', background: jobFilter === f ? '#2563eb' : '#fff', color: jobFilter === f ? '#fff' : '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {f === 'ALL' ? 'Tất cả' : f === 'PENDING' ? `Chờ (${allJobs.filter(j => j.status === 'PENDING').length})` : f === 'APPROVED' ? `Duyệt (${allJobs.filter(j => j.status === 'APPROVED').length})` : `Từ chối (${allJobs.filter(j => j.status === 'REJECTED').length})`}
-            </button>
-          ))}
+    <div className="jp-card">
+      <div className="jp-card-body">
+        <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h5 className="fw-bold mb-0"><i className="bi bi-briefcase me-2 text-primary"></i>Quản lý tin tuyển dụng</h5>
+          <div className="d-flex gap-1 flex-wrap">
+            {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map(f => (
+              <button key={f} className={`btn btn-sm ${jobFilter === f ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setJobFilter(f)}>
+                {f === 'ALL' ? 'Tất cả' : f === 'PENDING' ? `Chờ (${allJobs.filter(j => j.status === 'PENDING').length})` : f === 'APPROVED' ? `Duyệt (${allJobs.filter(j => j.status === 'APPROVED').length})` : `Từ chối (${allJobs.filter(j => j.status === 'REJECTED').length})`}
+              </button>
+            ))}
+          </div>
         </div>
+        {filteredJobs.length === 0 ? <p className="text-muted text-center py-4">Không có tin nào.</p> : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle jp-table">
+              <thead><tr><th>ID</th><th>Tiêu đề</th><th>NTD</th><th>Địa điểm</th><th>Lương</th><th>Trạng thái</th><th>Hiển thị</th><th>Hành động</th></tr></thead>
+              <tbody>
+                {filteredJobs.map(job => (
+                  <tr key={job.id}>
+                    <td className="fw-semibold">#{job.id}</td>
+                    <td>{editingJob?.id === job.id ? <input type="text" className="form-control form-control-sm" value={editingJob.title} onChange={e => setEditingJob({...editingJob, title: e.target.value})} /> : <span className="fw-semibold">{job.title}</span>}</td>
+                    <td>{job.employer?.username || 'N/A'}</td>
+                    <td>{editingJob?.id === job.id ? <input type="text" className="form-control form-control-sm" value={editingJob.location || ''} onChange={e => setEditingJob({...editingJob, location: e.target.value})} /> : job.location}</td>
+                    <td>{editingJob?.id === job.id ? <input type="number" className="form-control form-control-sm" value={editingJob.salary || ''} onChange={e => setEditingJob({...editingJob, salary: parseFloat(e.target.value) || 0})} /> : job.salary ? `${job.salary.toLocaleString('vi-VN')}đ` : 'Thỏa thuận'}</td>
+                    <td>
+                      <span className={`badge ${job.status === 'APPROVED' ? 'bg-success' : job.status === 'PENDING' ? 'bg-warning text-dark' : 'bg-danger'}`}>
+                        <i className={`bi ${job.status === 'APPROVED' ? 'bi-check-circle' : job.status === 'PENDING' ? 'bi-hourglass-split' : 'bi-x-circle'} me-1`}></i>
+                        {job.status === 'APPROVED' ? 'Đã duyệt' : job.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+                      </span>
+                    </td>
+                    <td>
+                      <button className={`btn btn-sm ${job.active !== false ? 'btn-outline-success' : 'btn-outline-danger'}`} onClick={() => handleToggleActive(job.id)}>
+                        <i className={`bi ${job.active !== false ? 'bi-toggle-on' : 'bi-toggle-off'} me-1`}></i>{job.active !== false ? 'Bật' : 'Tắt'}
+                      </button>
+                    </td>
+                    <td>
+                      <div className="d-flex gap-1">
+                        {editingJob?.id === job.id ? (
+                          <>
+                            <button className="btn btn-success btn-sm" onClick={() => handleUpdateJob(job.id)}><i className="bi bi-check-lg"></i></button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setEditingJob(null)}><i className="bi bi-x-lg"></i></button>
+                          </>
+                        ) : (
+                          <>
+                            {job.status !== 'APPROVED' && <button className="btn btn-outline-success btn-sm" onClick={() => handleChangeJobStatus(job.id, 'APPROVED')} title="Duyệt"><i className="bi bi-check-lg"></i></button>}
+                            {job.status !== 'REJECTED' && <button className="btn btn-outline-warning btn-sm" onClick={() => handleChangeJobStatus(job.id, 'REJECTED')} title="Từ chối"><i className="bi bi-x-lg"></i></button>}
+                            <button className="btn btn-outline-primary btn-sm" onClick={() => setEditingJob({ id: job.id, title: job.title, location: job.location, salary: job.salary, description: job.description })} title="Sửa"><i className="bi bi-pencil"></i></button>
+                            <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteJob(job.id)} title="Xóa"><i className="bi bi-trash"></i></button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-      {filteredJobs.length === 0 ? <p style={{ color: '#6b7280', textAlign: 'center', padding: 30 }}>Không có tin nào.</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ minWidth: 800 }}>
-            <thead>
-              <tr><th>ID</th><th>Tiêu đề</th><th>Nhà tuyển dụng</th><th>Địa điểm</th><th>Lương</th><th>Trạng thái</th><th>Hiển thị</th><th>Hành động</th></tr>
-            </thead>
-            <tbody>
-              {filteredJobs.map(job => (
-                <tr key={job.id}>
-                  <td style={{ fontWeight: 600 }}>#{job.id}</td>
-                  <td>{editingJob?.id === job.id ? <input type="text" className="form-control" value={editingJob.title} onChange={e => setEditingJob({...editingJob, title: e.target.value})} /> : <span style={{ fontWeight: 600 }}>{job.title}</span>}</td>
-                  <td>{job.employer?.username || 'N/A'}</td>
-                  <td>{editingJob?.id === job.id ? <input type="text" className="form-control" value={editingJob.location || ''} onChange={e => setEditingJob({...editingJob, location: e.target.value})} /> : job.location}</td>
-                  <td>{editingJob?.id === job.id ? <input type="number" className="form-control" value={editingJob.salary || ''} onChange={e => setEditingJob({...editingJob, salary: parseFloat(e.target.value) || 0})} /> : job.salary ? `${job.salary.toLocaleString('vi-VN')}đ` : 'Thỏa thuận'}</td>
-                  <td>
-                    <span style={S.badge(
-                      job.status === 'APPROVED' ? '#dcfce7' : job.status === 'PENDING' ? '#fef9c3' : '#fee2e2',
-                      job.status === 'APPROVED' ? '#166534' : job.status === 'PENDING' ? '#854d0e' : '#991b1b'
-                    )}>
-                      {job.status === 'APPROVED' ? '✅ Đã duyệt' : job.status === 'PENDING' ? '⏳ Chờ duyệt' : '❌ Từ chối'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleToggleActive(job.id)}
-                      style={{
-                        padding: '4px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                        background: job.active !== false ? '#dcfce7' : '#fee2e2',
-                        color: job.active !== false ? '#166534' : '#991b1b'
-                      }}>
-                      {job.active !== false ? '🟢 Bật' : '🔴 Tắt'}
-                    </button>
-                  </td>
-                  <td>
-                    <div style={S.tblAction}>
-                      {editingJob?.id === job.id ? (
-                        <>
-                          <button style={S.actionBtn('#16a34a')} onClick={() => handleUpdateJob(job.id)}>💾 Lưu</button>
-                          <button style={S.actionBtn('#6b7280')} onClick={() => setEditingJob(null)}>Hủy</button>
-                        </>
-                      ) : (
-                        <>
-                          {job.status !== 'APPROVED' && <button style={S.actionBtn('#16a34a')} onClick={() => handleChangeJobStatus(job.id, 'APPROVED')}>✅</button>}
-                          {job.status !== 'REJECTED' && <button style={S.actionBtn('#f59e0b')} onClick={() => handleChangeJobStatus(job.id, 'REJECTED')}>❌</button>}
-                          <button style={S.actionBtn('#3b82f6')} onClick={() => setEditingJob({ id: job.id, title: job.title, location: job.location, salary: job.salary, description: job.description })}>✏️</button>
-                          <button style={S.actionBtn('#dc2626')} onClick={() => handleDeleteJob(job.id)}>🗑️</button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 
   const renderUsers = () => (
-    <div style={S.card}>
-      <div style={S.cardTitle}>👥 Quản lý người dùng</div>
-      {users.length === 0 ? <p style={{ color: '#6b7280' }}>Không có người dùng.</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr><th>ID</th><th>Username</th><th>Vai trò</th><th>Trạng thái</th><th>Hành động</th></tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={{ background: u.enabled ? '' : '#fef2f2' }}>
-                  <td style={{ fontWeight: 600 }}>#{u.id}</td>
-                  <td style={{ fontWeight: 600 }}>{u.username}</td>
-                  <td>
-                    {u.roles.map((r, i) => (
-                      <span key={i} style={S.badge(
-                        r === 'ROLE_ADMIN' ? '#ede9fe' : r === 'ROLE_EMPLOYER' ? '#dbeafe' : '#dcfce7',
-                        r === 'ROLE_ADMIN' ? '#6d28d9' : r === 'ROLE_EMPLOYER' ? '#1d4ed8' : '#166534'
-                      )}>
-                        {r === 'ROLE_ADMIN' ? '🛡️ Admin' : r === 'ROLE_EMPLOYER' ? '🏢 Employer' : '👤 Candidate'}
+    <div className="jp-card">
+      <div className="jp-card-body">
+        <h5 className="fw-bold mb-3"><i className="bi bi-people me-2 text-primary"></i>Quản lý người dùng</h5>
+        {users.length === 0 ? <p className="text-muted">Không có người dùng.</p> : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle jp-table">
+              <thead><tr><th>ID</th><th>Username</th><th>Vai trò</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className={!u.enabled ? 'table-danger' : ''}>
+                    <td className="fw-semibold">#{u.id}</td>
+                    <td className="fw-semibold">{u.username}</td>
+                    <td>
+                      {u.roles.map((r, i) => (
+                        <span key={i} className={`badge me-1 ${r === 'ROLE_ADMIN' ? 'bg-purple' : r === 'ROLE_EMPLOYER' ? 'bg-primary' : 'bg-success'}`}
+                          style={r === 'ROLE_ADMIN' ? { background: '#7c3aed' } : {}}>
+                          <i className={`bi ${r === 'ROLE_ADMIN' ? 'bi-shield-lock' : r === 'ROLE_EMPLOYER' ? 'bi-building' : 'bi-person'} me-1`}></i>
+                          {r === 'ROLE_ADMIN' ? 'Admin' : r === 'ROLE_EMPLOYER' ? 'Employer' : 'Candidate'}
+                        </span>
+                      ))}
+                    </td>
+                    <td>
+                      <span className={`badge ${u.enabled ? 'bg-success' : 'bg-danger'}`}>
+                        <i className={`bi ${u.enabled ? 'bi-check-circle' : 'bi-lock'} me-1`}></i>
+                        {u.enabled ? 'Hoạt động' : 'Đã khóa'}
                       </span>
-                    ))}
-                  </td>
-                  <td>
-                    <span style={S.badge(u.enabled ? '#dcfce7' : '#fee2e2', u.enabled ? '#166534' : '#991b1b')}>
-                      {u.enabled ? '🟢 Hoạt động' : '🔴 Đã khóa'}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={S.tblAction}>
+                    </td>
+                    <td>
                       {!u.roles.includes('ROLE_ADMIN') ? (
-                        <>
-                          <button style={S.actionBtn(u.enabled ? '#f59e0b' : '#16a34a')} onClick={() => handleToggleLock(u.id)}>
-                            {u.enabled ? '🔒 Khóa' : '🔓 Mở'}
+                        <div className="d-flex gap-1">
+                          <button className={`btn btn-sm ${u.enabled ? 'btn-outline-warning' : 'btn-outline-success'}`} onClick={() => handleToggleLock(u.id)}>
+                            <i className={`bi ${u.enabled ? 'bi-lock' : 'bi-unlock'} me-1`}></i>{u.enabled ? 'Khóa' : 'Mở'}
                           </button>
-                          <button style={S.actionBtn('#dc2626')} onClick={() => handleDeleteUser(u.id, u.username)}>🗑️ Xóa</button>
-                        </>
-                      ) : <span style={{ fontSize: 12, color: '#6b7280' }}>Admin</span>}
+                          <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteUser(u.id, u.username)}>
+                            <i className="bi bi-trash me-1"></i>Xóa
+                          </button>
+                        </div>
+                      ) : <span className="text-muted small">Admin</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderCategories = () => (
+    <div className="jp-card">
+      <div className="jp-card-body">
+        <h5 className="fw-bold mb-3"><i className="bi bi-folder me-2 text-primary"></i>Quản lý danh mục</h5>
+        <form onSubmit={handleCatSubmit} className="d-flex gap-2 align-items-end mb-4 p-3 bg-light rounded-3 flex-wrap">
+          <div className="flex-grow-1">
+            <label className="form-label small fw-semibold">Tên danh mục</label>
+            <input type="text" className="form-control" value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} required />
+          </div>
+          <div style={{ flex: 2 }}>
+            <label className="form-label small fw-semibold">Mô tả</label>
+            <input type="text" className="form-control" value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} />
+          </div>
+          <button type="submit" className="btn btn-primary"><i className={`bi ${editingCatId ? 'bi-check-lg' : 'bi-plus-lg'} me-1`}></i>{editingCatId ? 'Cập nhật' : 'Thêm'}</button>
+          {editingCatId && <button type="button" className="btn btn-secondary" onClick={() => { setEditingCatId(null); setCatForm({ name: '', description: '' }); }}>Hủy</button>}
+        </form>
+        <div className="table-responsive">
+          <table className="table table-hover align-middle jp-table">
+            <thead><tr><th>ID</th><th>Tên</th><th>Mô tả</th><th>Hành động</th></tr></thead>
+            <tbody>
+              {categories.map(cat => (
+                <tr key={cat.id}>
+                  <td className="fw-semibold">#{cat.id}</td>
+                  <td className="fw-semibold">{cat.name}</td>
+                  <td>{cat.description}</td>
+                  <td>
+                    <div className="d-flex gap-1">
+                      <button className="btn btn-outline-warning btn-sm" onClick={() => handleEditCat(cat)}><i className="bi bi-pencil me-1"></i>Sửa</button>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteCat(cat.id)}><i className="bi bi-trash me-1"></i>Xóa</button>
                     </div>
                   </td>
                 </tr>
@@ -463,84 +371,49 @@ function AdminDashboard() {
             </tbody>
           </table>
         </div>
-      )}
+      </div>
     </div>
   );
 
-  const renderCategories = () => (
-    <div style={S.card}>
-      <div style={S.cardTitle}>📁 Quản lý danh mục</div>
-      <form onSubmit={handleCatSubmit} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginBottom: 20, padding: 16, background: '#f9fafb', borderRadius: 10 }}>
-        <div style={{ flex: 1 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Tên danh mục</label>
-          <input type="text" className="form-control" value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} required />
-        </div>
-        <div style={{ flex: 2 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Mô tả</label>
-          <input type="text" className="form-control" value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} />
-        </div>
-        <button type="submit" style={{ ...S.actionBtn('#2563eb'), padding: '10px 20px', fontSize: 14 }}>{editingCatId ? '💾 Cập nhật' : '➕ Thêm'}</button>
-        {editingCatId && <button type="button" style={{ ...S.actionBtn('#6b7280'), padding: '10px 20px', fontSize: 14 }} onClick={() => { setEditingCatId(null); setCatForm({ name: '', description: '' }); }}>Hủy</button>}
-      </form>
-      <table className="table">
-        <thead><tr><th>ID</th><th>Tên</th><th>Mô tả</th><th>Hành động</th></tr></thead>
-        <tbody>
-          {categories.map(cat => (
-            <tr key={cat.id}>
-              <td style={{ fontWeight: 600 }}>#{cat.id}</td>
-              <td style={{ fontWeight: 600 }}>{cat.name}</td>
-              <td>{cat.description}</td>
-              <td>
-                <div style={S.tblAction}>
-                  <button style={S.actionBtn('#f59e0b')} onClick={() => handleEditCat(cat)}>✏️ Sửa</button>
-                  <button style={S.actionBtn('#dc2626')} onClick={() => handleDeleteCat(cat.id)}>🗑️ Xóa</button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  const sectionRenderers = {
-    dashboard: renderDashboard,
-    pending: renderPendingJobs,
-    jobs: renderJobs,
-    users: renderUsers,
-    categories: renderCategories,
-  };
+  const sectionRenderers = { dashboard: renderDashboard, pending: renderPendingJobs, jobs: renderJobs, users: renderUsers, categories: renderCategories };
 
   return (
-    <div style={S.wrapper}>
-      {/* ─── Sidebar ─── */}
-      <aside style={S.sidebar}>
-        <div style={S.sidebarHeader}>
-          <div style={S.sidebarLogo}>⚙️</div>
-          {sidebarOpen && <div><div style={{ fontWeight: 700, fontSize: 16 }}>Admin Panel</div><div style={{ fontSize: 11, color: '#94a3b8' }}>{AuthService.getUsername()}</div></div>}
+    <div className="d-flex" style={{ minHeight: 'calc(100vh - 56px)' }}>
+      {/* Sidebar */}
+      <aside className="jp-sidebar" style={{ width: sidebarOpen ? 240 : 64, transition: 'width .25s ease' }}>
+        <div className="p-3 border-bottom border-white border-opacity-10 d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center justify-content-center rounded-3 bg-primary flex-shrink-0" style={{ width: 36, height: 36 }}>
+            <i className="bi bi-gear-wide-connected text-white"></i>
+          </div>
+          {sidebarOpen && (
+            <div>
+              <div className="fw-bold" style={{ fontSize: 15 }}>Admin Panel</div>
+              <div style={{ fontSize: 11 }} className="text-white text-opacity-50">{AuthService.getUsername()}</div>
+            </div>
+          )}
         </div>
-        <div style={{ flex: 1, paddingTop: 8 }}>
+        <div className="flex-grow-1 pt-2">
           {menuItems.map(m => (
-            <div key={m.key} style={S.menuItem(activeSection === m.key)}
-              onClick={() => handleMenuClick(m.key)}
-              onMouseEnter={e => { if (activeSection !== m.key) e.currentTarget.style.background = 'rgba(255,255,255,.05)'; }}
-              onMouseLeave={e => { if (activeSection !== m.key) e.currentTarget.style.background = 'transparent'; }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{m.icon}</span>
+            <div key={m.key}
+              className={`d-flex align-items-center gap-2 px-3 py-2 ${activeSection === m.key ? 'bg-white bg-opacity-10 border-start border-3 border-primary text-white fw-semibold' : 'text-white text-opacity-50 border-start border-3 border-transparent'}`}
+              style={{ cursor: 'pointer', fontSize: 14, transition: 'all .15s' }}
+              onClick={() => handleMenuClick(m.key)}>
+              <i className={`bi ${m.icon}`} style={{ fontSize: 18, flexShrink: 0 }}></i>
               {sidebarOpen && <span>{m.label}</span>}
             </div>
           ))}
         </div>
-        <button style={S.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
-          {sidebarOpen ? '◀' : '▶'}
+        <button className="btn btn-sm btn-outline-light mx-3 mb-3" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <i className={`bi ${sidebarOpen ? 'bi-chevron-left' : 'bi-chevron-right'}`}></i>
         </button>
       </aside>
 
-      {/* ─── Main content ─── */}
-      <main style={S.main}>
-        <div style={S.pageTitle}>
-          {menuItems.find(m => m.key === activeSection)?.icon}{' '}
+      {/* Main content */}
+      <main className="flex-grow-1 p-4" style={{ background: 'var(--jp-body)', overflow: 'auto' }}>
+        <h4 className="fw-bold mb-4">
+          <i className={`bi ${menuItems.find(m => m.key === activeSection)?.icon} me-2`}></i>
           {menuItems.find(m => m.key === activeSection)?.label}
-        </div>
+        </h4>
         {sectionRenderers[activeSection]?.()}
       </main>
     </div>

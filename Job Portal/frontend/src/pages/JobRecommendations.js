@@ -1,148 +1,97 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService';
-import API_BASE from '../config/api';
+import { Link } from 'react-router-dom';
+import JobService from '../services/JobService';
 
-const JobRecommendations = () => {
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('recommended');
-    const [page, setPage] = useState(0);
-    const navigate = useNavigate();
+function JobRecommendations() {
+  const [activeTab, setActiveTab] = useState('recommended');
+  const [recommended, setRecommended] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [newest, setNewest] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchRecommendations();
-    }, [activeTab, page]);
-
-    const fetchRecommendations = async () => {
-        try {
-            setLoading(true);
-            const token = AuthService.getToken();
-            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-            let url;
-            const params = { limit: 10 };
-
-            switch(activeTab) {
-                case 'recommended':
-                    url = `${API_BASE}/recommendations/jobs`;
-                    params.page = page;
-                    params.size = 10;
-                    break;
-                case 'trending':
-                    url = `${API_BASE}/recommendations/trending`;
-                    break;
-                case 'new':
-                    url = `${API_BASE}/recommendations/new`;
-                    params.limitDays = 7;
-                    break;
-                default:
-                    return;
-            }
-
-            const response = await axios.get(url, { headers, params });
-            const data = response.data.content || response.data;
-            setJobs(Array.isArray(data) ? data : []);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching recommendations:', error);
-            setJobs([]);
-            setLoading(false);
-        }
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [recRes, trendRes, newRes] = await Promise.all([
+          JobService.getRecommendedJobs({}).catch(() => ({ data: { content: [] } })),
+          JobService.getTrendingJobs(10).catch(() => ({ data: [] })),
+          JobService.getNewJobs(7, 10).catch(() => ({ data: [] }))
+        ]);
+        setRecommended(recRes.data?.content || recRes.data || []);
+        setTrending(trendRes.data || []);
+        setNewest(newRes.data || []);
+      } catch (err) { console.error(err); }
+      setLoading(false);
     };
+    fetchData();
+  }, []);
 
-    const renderJobCard = (job) => (
-        <div key={job.id} className="job-card">
-            <div className="job-card-header">
-                <h5>{job.title}</h5>
-                <span className="job-id-badge">#{job.id}</span>
-            </div>
-            <p className="company-name">👔 {job.employer?.username || 'Công ty'}</p>
-            <p className="job-location">📍 {job.location}</p>
-            <p className="job-salary">💰 {job.salary ? (job.salary / 1000000).toFixed(1) : 'N/A'}M VND</p>
-            <p className="job-type">
-                <span className="badge" style={{
-                    backgroundColor: job.employmentType === 'Full-time' ? '#28a745' :
-                                   job.employmentType === 'Part-time' ? '#ffc107' :
-                                   job.employmentType === 'Contract' ? '#17a2b8' : '#6c757d'
-                }}>
-                    {job.employmentType}
-                </span>
-            </p>
-            <p className="job-description">{job.description?.substring(0, 100)}...</p>
-            <button
-                onClick={() => navigate(`/job/${job.id}`)}
-                className="btn btn-outline-primary btn-sm"
-            >
-                Xem chi tiết →
+  const tabs = [
+    { key: 'recommended', label: 'Gợi ý cho bạn', icon: 'bi-star', data: recommended },
+    { key: 'trending', label: 'Xu hướng', icon: 'bi-fire', data: trending },
+    { key: 'newest', label: 'Mới nhất', icon: 'bi-clock-history', data: newest }
+  ];
+
+  const currentData = tabs.find(t => t.key === activeTab)?.data || [];
+
+  const formatSalary = (s) => s ? Number(s).toLocaleString('vi-VN') + ' VND' : 'Thỏa thuận';
+
+  const JobCard = ({ job }) => (
+    <div className="col-md-6 col-lg-4">
+      <div className="jp-job-card h-100">
+        <div className="d-flex align-items-start justify-content-between mb-2">
+          <h6 className="fw-bold mb-0">{job.title}</h6>
+        </div>
+        <div className="text-muted small mb-2">
+          <span className="me-3"><i className="bi bi-building me-1"></i>{job.company || job.employer?.companyName || 'N/A'}</span>
+          <span><i className="bi bi-geo-alt me-1"></i>{job.location || 'N/A'}</span>
+        </div>
+        <div className="mb-3">
+          <span className="jp-badge-primary me-2">{job.employmentType || 'Full-time'}</span>
+          <span className="text-success fw-semibold small"><i className="bi bi-cash-stack me-1"></i>{formatSalary(job.salary)}</span>
+        </div>
+        <Link to={`/jobs/${job.id}`} className="btn btn-outline-primary btn-sm w-100">
+          <i className="bi bi-eye me-1"></i>Xem chi tiết
+        </Link>
+      </div>
+    </div>
+  );
+
+  if (loading) return <div className="jp-loading-page"><div className="jp-spinner"></div></div>;
+
+  return (
+    <div className="jp-container">
+      <div className="jp-page-header mb-4">
+        <h1><i className="bi bi-star me-2"></i>Việc Làm Gợi Ý</h1>
+        <p>Khám phá các cơ hội việc làm phù hợp với bạn</p>
+      </div>
+
+      <ul className="nav nav-tabs mb-4">
+        {tabs.map(tab => (
+          <li className="nav-item" key={tab.key}>
+            <button className={`nav-link ${activeTab === tab.key ? 'active' : ''}`} onClick={() => setActiveTab(tab.key)}>
+              <i className={`bi ${tab.icon} me-1`}></i>{tab.label}
+              <span className="badge bg-primary bg-opacity-10 text-primary ms-2">{tab.data.length}</span>
             </button>
+          </li>
+        ))}
+      </ul>
+
+      {currentData.length === 0 ? (
+        <div className="jp-empty-state">
+          <i className="bi bi-inbox"></i>
+          <h5>Chưa có việc làm nào</h5>
+          <p>Hãy cập nhật hồ sơ để nhận gợi ý phù hợp hơn</p>
+          <Link to="/jobs" className="btn btn-primary"><i className="bi bi-search me-1"></i>Tìm việc làm</Link>
         </div>
-    );
-
-    if (loading) return <div className="container-fluid text-center py-5">Đang tải...</div>;
-
-    return (
-        <div className="container-fluid recommendations-container">
-            <div className="recommendations-header">
-                <h2>💼 Khám Phá Công Việc</h2>
-                <p>Tìm những cơ hội việc làm phù hợp với bạn</p>
-            </div>
-
-            <div className="tabs-section">
-                <div className="nav nav-tabs" role="tablist">
-                    <button
-                        className={`nav-link ${activeTab === 'recommended' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('recommended'); setPage(0); }}
-                    >
-                        ⭐ Đề Xuất Cho Bạn
-                    </button>
-                    <button
-                        className={`nav-link ${activeTab === 'trending' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('trending')}
-                    >
-                        🔥 Xu Hướng
-                    </button>
-                    <button
-                        className={`nav-link ${activeTab === 'new' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('new')}
-                    >
-                        ✨ Mới Nhất
-                    </button>
-                </div>
-            </div>
-
-            <div className="job-list-content">
-                {jobs.length === 0 ? (
-                    <p className="text-center text-muted mt-5">Không có công việc nào</p>
-                ) : (
-                    <div className="job-card-grid">
-                        {jobs.map(renderJobCard)}
-                    </div>
-                )}
-            </div>
-
-            {/* Pagination for recommended tab */}
-            {activeTab === 'recommended' && jobs.length > 0 && (
-                <div className="pagination-container mt-4">
-                    <button
-                        onClick={() => setPage(Math.max(0, page - 1))}
-                        disabled={page === 0}
-                        className="btn btn-sm btn-outline-secondary"
-                    >
-                        ← Trước
-                    </button>
-                    <span className="mx-2">Trang {page + 1}</span>
-                    <button
-                        onClick={() => setPage(page + 1)}
-                        className="btn btn-sm btn-outline-secondary"
-                    >
-                        Sau →
-                    </button>
-                </div>
-            )}
+      ) : (
+        <div className="row g-3">
+          {currentData.map(job => <JobCard key={job.id} job={job} />)}
         </div>
-    );
-};
+      )}
+    </div>
+  );
+}
 
 export default JobRecommendations;

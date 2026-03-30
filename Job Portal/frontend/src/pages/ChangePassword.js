@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AuthService from '../services/AuthService';
 import API_BASE from '../config/api';
@@ -8,227 +7,73 @@ function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const navigate = useNavigate();
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
-
     if (newPassword.length < 6) {
-      setError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+      setMessage({ type: 'danger', text: 'Mật khẩu mới phải có ít nhất 6 ký tự!' });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Xác nhận mật khẩu không khớp.');
+      setMessage({ type: 'danger', text: 'Mật khẩu xác nhận không khớp!' });
       return;
     }
-
-    setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/auth/change-password`, {
-        currentPassword,
-        newPassword
-      }, {
+      await axios.post(`${API_BASE}/auth/change-password`, { currentPassword, newPassword }, {
         headers: { Authorization: `Bearer ${AuthService.getToken()}` }
       });
-      setMessage(res.data.message);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setMessage({ type: 'success', text: 'Đổi mật khẩu thành công!' });
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Đổi mật khẩu thất bại.');
-    } finally {
-      setLoading(false);
+      setMessage({ type: 'danger', text: err.response?.data?.message || 'Mật khẩu hiện tại không đúng!' });
     }
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.875rem 1rem',
-    border: '2px solid #e5e7eb',
-    borderRadius: '12px',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s ease',
-    outline: 'none',
-    boxSizing: 'border-box'
-  };
-
-  const labelStyle = {
-    display: 'block',
-    marginBottom: '0.5rem',
-    fontWeight: '600',
-    color: '#374151',
-    fontSize: '0.95rem'
   };
 
   return (
-    <div style={{
-      maxWidth: '480px',
-      margin: '3rem auto',
-      padding: '2.5rem',
-      backgroundColor: 'white',
-      borderRadius: '20px',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <span style={{ fontSize: '2.5rem' }}>🔐</span>
-        <h2 style={{
-          fontSize: '1.8rem',
-          fontWeight: '700',
-          background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          marginTop: '0.5rem'
-        }}>
-          Đổi Mật Khẩu
-        </h2>
-        <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
-          Nhập mật khẩu hiện tại và mật khẩu mới
-        </p>
-      </div>
-
-      {message && (
-        <div style={{
-          backgroundColor: '#ecfdf5',
-          border: '1px solid #a7f3d0',
-          borderRadius: '12px',
-          padding: '1rem',
-          marginBottom: '1.5rem',
-          color: '#065f46',
-          textAlign: 'center'
-        }}>
-          ✅ {message}
-        </div>
-      )}
-
-      {error && (
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '1rem',
-          marginBottom: '1.5rem',
-          color: '#dc2626',
-          textAlign: 'center'
-        }}>
-          ❌ {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>🔑 Mật khẩu hiện tại</label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showCurrent ? 'text' : 'password'}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              placeholder="Nhập mật khẩu hiện tại"
-              style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-            />
-            <button type="button"
-              onClick={() => setShowCurrent(!showCurrent)}
-              style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem'
-              }}>
-              {showCurrent ? '🙈' : '👁️'}
-            </button>
+    <div className="jp-auth-wrapper">
+      <div className="jp-auth-card" style={{ maxWidth: 460 }}>
+        <div className="text-center mb-4">
+          <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 mb-3" style={{ width: 64, height: 64 }}>
+            <i className="bi bi-shield-lock fs-2 text-primary"></i>
           </div>
+          <h3 className="fw-bold">Đổi Mật Khẩu</h3>
+          <p className="text-muted">Cập nhật mật khẩu để bảo mật tài khoản</p>
         </div>
 
-        <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>🆕 Mật khẩu mới</label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showNew ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
-              style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-            />
-            <button type="button"
-              onClick={() => setShowNew(!showNew)}
-              style={{
-                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem'
-              }}>
-              {showNew ? '🙈' : '👁️'}
-            </button>
+        {message.text && <div className={`alert alert-${message.type}`}><i className={`bi ${message.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>{message.text}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Mật khẩu hiện tại</label>
+            <div className="input-group">
+              <span className="input-group-text"><i className="bi bi-lock"></i></span>
+              <input type={showCurrent ? 'text' : 'password'} className="form-control" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required placeholder="Nhập mật khẩu hiện tại" />
+              <button type="button" className="input-group-text" onClick={() => setShowCurrent(!showCurrent)}><i className={`bi ${showCurrent ? 'bi-eye-slash' : 'bi-eye'}`}></i></button>
+            </div>
           </div>
-          {newPassword && newPassword.length < 6 && (
-            <p style={{ color: '#f59e0b', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              ⚠️ Mật khẩu phải có ít nhất 6 ký tự
-            </p>
-          )}
-        </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={labelStyle}>✅ Xác nhận mật khẩu mới</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            placeholder="Nhập lại mật khẩu mới"
-            style={inputStyle}
-            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-            onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-          />
-          {confirmPassword && newPassword !== confirmPassword && (
-            <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              ❌ Mật khẩu xác nhận không khớp
-            </p>
-          )}
-        </div>
+          <div className="mb-3">
+            <label className="form-label">Mật khẩu mới</label>
+            <div className="input-group">
+              <span className="input-group-text"><i className="bi bi-lock-fill"></i></span>
+              <input type={showNew ? 'text' : 'password'} className="form-control" value={newPassword} onChange={e => setNewPassword(e.target.value)} required placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)" />
+              <button type="button" className="input-group-text" onClick={() => setShowNew(!showNew)}><i className={`bi ${showNew ? 'bi-eye-slash' : 'bi-eye'}`}></i></button>
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '0.875rem',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '1.05rem',
-            fontWeight: '600',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {loading ? '⏳ Đang xử lý...' : '🔄 Đổi Mật Khẩu'}
-        </button>
-      </form>
+          <div className="mb-4">
+            <label className="form-label">Xác nhận mật khẩu mới</label>
+            <div className="input-group">
+              <span className="input-group-text"><i className="bi bi-shield-check"></i></span>
+              <input type="password" className="form-control" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required placeholder="Nhập lại mật khẩu mới" />
+            </div>
+          </div>
 
-      <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#2563eb',
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            fontWeight: '500'
-          }}
-        >
-          ← Quay lại
-        </button>
+          <button type="submit" className="btn btn-primary w-100"><i className="bi bi-check-lg me-1"></i>Cập Nhật Mật Khẩu</button>
+        </form>
       </div>
     </div>
   );

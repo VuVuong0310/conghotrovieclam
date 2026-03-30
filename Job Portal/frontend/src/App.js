@@ -59,29 +59,25 @@ function NotificationBell() {
   };
 
   return (
-    <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={toggleDropdown} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'white', position: 'relative', padding: '4px 8px' }}>
-        🔔
-        {unreadCount > 0 && (
-          <span style={{ position: 'absolute', top: -4, right: -6, background: '#dc2626', color: 'white', borderRadius: '50%', padding: '1px 6px', fontSize: 11, fontWeight: 'bold' }}>
-            {unreadCount}
-          </span>
-        )}
+    <div ref={dropdownRef} style={{ position: 'relative' }}>
+      <button onClick={toggleDropdown} className="jp-notif-btn">
+        <i className="bi bi-bell"></i>
+        {unreadCount > 0 && <span className="jp-notif-badge">{unreadCount}</span>}
       </button>
       {showDropdown && (
-        <div style={{ position: 'absolute', right: 0, top: 35, width: 320, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 1000, maxHeight: 400, overflowY: 'auto' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff' }}>
-            <strong style={{ color: '#1f2937', fontSize: 14 }}>Thông báo</strong>
-            {unreadCount > 0 && <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Đọc tất cả</button>}
+        <div className="jp-notif-dropdown">
+          <div className="jp-notif-header">
+            <strong>Thông báo</strong>
+            {unreadCount > 0 && <button onClick={handleMarkAllRead} className="btn btn-link btn-sm p-0 text-decoration-none" style={{ fontSize: 12 }}>Đọc tất cả</button>}
           </div>
           {notifications.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>Không có thông báo</div>
+            <div className="text-center text-muted py-4" style={{ fontSize: 14 }}>Không có thông báo</div>
           ) : (
             notifications.map(n => (
               <div key={n.id} onClick={() => !n.read && handleMarkRead(n.id)}
-                style={{ padding: '10px 16px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', background: n.read ? '#fff' : '#eff6ff' }}>
-                <div style={{ fontSize: 13, color: '#1f2937', lineHeight: 1.5 }}>{n.message}</div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
+                className={`jp-notif-item ${!n.read ? 'unread' : ''}`}>
+                <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.message}</div>
+                <div className="text-muted" style={{ fontSize: 11, marginTop: 4 }}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
               </div>
             ))
           )}
@@ -119,34 +115,45 @@ function App() {
   return (
     <Router basename="/jobportal">
       <div className="App">
-        <nav className="navbar">
-          <h1>Job Portal</h1>
-          <div className="navbar-links">
-            {isLoggedIn && (
-              <>
-                <Link to="/jobs">🔍 Tìm Việc</Link>
-                {isCandidate && <Link to="/recommendations">⭐ Đề Xuất</Link>}
-                {isCandidate && <Link to="/my-applications">📋 Đơn Ứng Tuyển</Link>}
-                {(isEmployer || isAdmin) && <Link to="/create-job">➕ Đăng Tuyển</Link>}
-                {isEmployer && <Link to="/employer-dashboard">💼 Dashboard</Link>}
-                {isAdmin && <Link to="/admin-dashboard">⚙️ Admin</Link>}
-                {isCandidate && <Link to={`/profile/${userId || 1}`}>👤 Hồ Sơ</Link>}
-                <Link to="/change-password">🔐 Đổi MK</Link>
-                <NotificationBell />
-                <button onClick={() => {
-                  AuthService.logout();
-                  window.location.href = '/jobportal/login';
-                }}>
-                  🚪 Đăng Xuất
-                </button>
-              </>
-            )}
-            {!isLoggedIn && (
-              <>
-                <Link to="/login">🔑 Đăng Nhập</Link>
-                <Link to="/register">📝 Đăng Ký</Link>
-              </>
-            )}
+        <nav className="navbar navbar-expand-lg jp-navbar">
+          <div className="container-fluid px-3">
+            <Link to="/jobs" className="navbar-brand">
+              <i className="bi bi-briefcase-fill"></i> JobPortal
+            </Link>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navMain">
+              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                {isLoggedIn && (
+                  <>
+                    <li className="nav-item"><Link className="nav-link" to="/jobs"><i className="bi bi-search"></i> Tìm Việc</Link></li>
+                    {isCandidate && <li className="nav-item"><Link className="nav-link" to="/recommendations"><i className="bi bi-star"></i> Đề Xuất</Link></li>}
+                    {isCandidate && <li className="nav-item"><Link className="nav-link" to="/my-applications"><i className="bi bi-file-earmark-text"></i> Đơn Ứng Tuyển</Link></li>}
+                    {(isEmployer || isAdmin) && <li className="nav-item"><Link className="nav-link" to="/create-job"><i className="bi bi-plus-circle"></i> Đăng Tuyển</Link></li>}
+                    {isEmployer && <li className="nav-item"><Link className="nav-link" to="/employer-dashboard"><i className="bi bi-grid-1x2"></i> Dashboard</Link></li>}
+                    {isAdmin && <li className="nav-item"><Link className="nav-link" to="/admin-dashboard"><i className="bi bi-gear"></i> Admin</Link></li>}
+                  </>
+                )}
+              </ul>
+              <div className="d-flex align-items-center gap-1">
+                {isLoggedIn ? (
+                  <>
+                    {isCandidate && <Link className="nav-link" to={`/profile/${userId || 1}`}><i className="bi bi-person-circle"></i> Hồ Sơ</Link>}
+                    <Link className="nav-link" to="/change-password"><i className="bi bi-shield-lock"></i></Link>
+                    <NotificationBell />
+                    <button className="nav-link btn-logout ms-1" onClick={() => { AuthService.logout(); window.location.href = '/jobportal/login'; }}>
+                      <i className="bi bi-box-arrow-right"></i> Đăng Xuất
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link className="nav-link" to="/login"><i className="bi bi-box-arrow-in-right"></i> Đăng Nhập</Link>
+                    <Link className="nav-link btn-auth ms-1" to="/register"><i className="bi bi-person-plus"></i> Đăng Ký</Link>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </nav>
 

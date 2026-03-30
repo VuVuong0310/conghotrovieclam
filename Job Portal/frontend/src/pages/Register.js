@@ -60,338 +60,80 @@ function Register() {
 
   const getRoleDescription = (selectedRole) => {
     return selectedRole === 'ROLE_CANDIDATE'
-      ? '📋 Tìm kiếm công việc và quản lý hồ sơ ứng tuyển'
-      : '💼 Đăng tin tuyển dụng và quản lý ứng viên';
-  };
-
-  const getRoleIcon = (selectedRole) => {
-    return selectedRole === 'ROLE_CANDIDATE' ? '👨‍💼' : '🏢';
+      ? 'Tìm kiếm công việc và quản lý hồ sơ ứng tuyển'
+      : 'Đăng tin tuyển dụng và quản lý ứng viên';
   };
 
   return (
-    <div className="container" style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)'
-    }}>
-      <div className="register-card" style={{
-        backgroundColor: '#fff',
-        padding: '3rem',
-        borderRadius: '12px',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-        width: '100%',
-        maxWidth: '500px'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{
-            color: '#2563eb',
-            marginBottom: '0.5rem',
-            fontSize: '2.5rem',
-            fontWeight: '700'
-          }}>
-            🎯 JobPortal
-          </h1>
-          <p style={{ color: '#6b7280', fontSize: '1.1rem' }}>
-            Tạo tài khoản để bắt đầu hành trình nghề nghiệp
-          </p>
+    <div className="jp-auth-wrapper">
+      <div className="jp-auth-card" style={{ maxWidth: 500 }}>
+        <div className="auth-logo">
+          <i className="bi bi-person-plus-fill"></i>
+          <h1>Tạo Tài Khoản</h1>
+          <p>Bắt đầu hành trình nghề nghiệp của bạn</p>
         </div>
 
-        {error && (
-          <div className="alert alert-danger" style={{
-            marginBottom: '1.5rem'
-          }}>
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="alert alert-success" style={{
-            marginBottom: '1.5rem'
-          }}>
-            {success}
-          </div>
-        )}
+        {error && <div className="alert alert-danger d-flex align-items-center gap-2"><i className="bi bi-exclamation-triangle"></i>{error}</div>}
+        {success && <div className="alert alert-success d-flex align-items-center gap-2"><i className="bi bi-check-circle"></i>{success}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-              fontWeight: '500'
-            }}>
-              📧 Email / Tên đăng nhập
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '1rem',
-                border: '2px solid #e5e7eb',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                transition: 'all 0.3s ease',
-                backgroundColor: '#fff'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-              placeholder="Nhập email của bạn"
-            />
+          <div className="mb-3">
+            <label className="form-label"><i className="bi bi-envelope me-1"></i>Email / Tên đăng nhập</label>
+            <input type="email" className="form-control" value={username} onChange={(e) => setUsername(e.target.value)} required placeholder="Nhập email của bạn" />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-              fontWeight: '500'
-            }}>
-              🔒 Mật khẩu
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  paddingRight: '3rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#fff'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem'
-                }}
-              >
-                {showPassword ? '🙈' : '👁️'}
+          <div className="mb-3">
+            <label className="form-label"><i className="bi bi-lock me-1"></i>Mật khẩu</label>
+            <div className="position-relative">
+              <input type={showPassword ? 'text' : 'password'} className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Tối thiểu 6 ký tự" style={{ paddingRight: '2.8rem' }} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted pe-3" style={{ textDecoration: 'none' }}>
+                <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
               </button>
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-              fontWeight: '500'
-            }}>
-              🔄 Xác nhận mật khẩu
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                className="form-control"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  paddingRight: '3rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  backgroundColor: '#fff'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                placeholder="Xác nhận mật khẩu"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem'
-                }}
-              >
-                {showConfirmPassword ? '🙈' : '👁️'}
+          <div className="mb-3">
+            <label className="form-label"><i className="bi bi-shield-lock me-1"></i>Xác nhận mật khẩu</label>
+            <div className="position-relative">
+              <input type={showConfirmPassword ? 'text' : 'password'} className="form-control" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Nhập lại mật khẩu" style={{ paddingRight: '2.8rem' }} />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted pe-3" style={{ textDecoration: 'none' }}>
+                <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
               </button>
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-              fontWeight: '500'
-            }}>
-              🎭 Loại tài khoản
-            </label>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <div
-                onClick={() => setRole('ROLE_CANDIDATE')}
-                style={{
-                  padding: '1rem',
-                  border: `2px solid ${role === 'ROLE_CANDIDATE' ? '#2563eb' : '#e5e7eb'}`,
-                  borderRadius: '12px',
-                  backgroundColor: role === 'ROLE_CANDIDATE' ? '#eff6ff' : '#fff',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  if (role !== 'ROLE_CANDIDATE') {
-                    e.target.style.borderColor = '#2563eb';
-                    e.target.style.backgroundColor = '#f0f7ff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (role !== 'ROLE_CANDIDATE') {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#fff';
-                  }
-                }}
-              >
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👨‍💼</div>
-                <div style={{ fontWeight: '600', color: '#2563eb' }}>Ứng Viên</div>
-                <div style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                  Tìm việc làm
+          <div className="mb-4">
+            <label className="form-label"><i className="bi bi-people me-1"></i>Loại tài khoản</label>
+            <div className="row g-2 mb-3">
+              <div className="col-6">
+                <div onClick={() => setRole('ROLE_CANDIDATE')} className={`jp-card text-center p-3 ${role === 'ROLE_CANDIDATE' ? 'border-primary bg-primary bg-opacity-10' : ''}`} style={{ cursor: 'pointer', borderWidth: 2 }}>
+                  <i className="bi bi-person-badge d-block mb-1" style={{ fontSize: '1.8rem', color: 'var(--jp-primary)' }}></i>
+                  <div className="fw-bold" style={{ color: 'var(--jp-primary)' }}>Ứng Viên</div>
+                  <small className="text-muted">Tìm việc làm</small>
                 </div>
               </div>
-
-              <div
-                onClick={() => setRole('ROLE_EMPLOYER')}
-                style={{
-                  padding: '1rem',
-                  border: `2px solid ${role === 'ROLE_EMPLOYER' ? '#2563eb' : '#e5e7eb'}`,
-                  borderRadius: '12px',
-                  backgroundColor: role === 'ROLE_EMPLOYER' ? '#eff6ff' : '#fff',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  if (role !== 'ROLE_EMPLOYER') {
-                    e.target.style.borderColor = '#2563eb';
-                    e.target.style.backgroundColor = '#f0f7ff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (role !== 'ROLE_EMPLOYER') {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#fff';
-                  }
-                }}
-              >
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏢</div>
-                <div style={{ fontWeight: '600', color: '#2563eb' }}>Nhà Tuyển Dụng</div>
-                <div style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                  Đăng tin tuyển dụng
+              <div className="col-6">
+                <div onClick={() => setRole('ROLE_EMPLOYER')} className={`jp-card text-center p-3 ${role === 'ROLE_EMPLOYER' ? 'border-primary bg-primary bg-opacity-10' : ''}`} style={{ cursor: 'pointer', borderWidth: 2 }}>
+                  <i className="bi bi-building d-block mb-1" style={{ fontSize: '1.8rem', color: 'var(--jp-primary)' }}></i>
+                  <div className="fw-bold" style={{ color: 'var(--jp-primary)' }}>Nhà Tuyển Dụng</div>
+                  <small className="text-muted">Đăng tuyển</small>
                 </div>
               </div>
             </div>
-
-            <div style={{
-              padding: '1rem',
-              backgroundColor: '#eff6ff',
-              borderRadius: '12px',
-              border: '1px solid #bfdbfe',
-              fontSize: '0.9rem',
-              color: '#1f2937'
-            }}>
-              <strong>{getRoleIcon(role)} {role === 'ROLE_CANDIDATE' ? 'Ứng Viên' : 'Nhà Tuyển Dụng'}:</strong><br />
-              {getRoleDescription(role)}
+            <div className="alert alert-info py-2 d-flex align-items-center gap-2" style={{ fontSize: '.88rem' }}>
+              <i className={`bi ${role === 'ROLE_CANDIDATE' ? 'bi-person-badge' : 'bi-building'}`}></i>
+              <span><strong>{role === 'ROLE_CANDIDATE' ? 'Ứng Viên' : 'Nhà Tuyển Dụng'}:</strong> {getRoleDescription(role)}</span>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              fontSize: '1.1rem',
-              fontWeight: '600',
-              border: 'none',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-              color: 'white',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              marginBottom: '1.5rem'
-            }}
-          >
-            {loading ? (
-              <>
-                <div className="loading" style={{ width: '20px', height: '20px', marginRight: '10px' }}></div>
-                Đang đăng ký...
-              </>
-            ) : (
-              '🎯 Tạo Tài Khoản'
-            )}
+          <button type="submit" className="btn btn-primary w-100 py-2 mb-3" disabled={loading}>
+            {loading ? <><span className="spinner-border spinner-border-sm me-2"></span>Đang đăng ký...</> : <><i className="bi bi-check-circle me-1"></i>Tạo Tài Khoản</>}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-            Đã có tài khoản?
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="btn btn-secondary"
-            style={{
-              backgroundColor: 'transparent',
-              border: '2px solid #2563eb',
-              color: '#2563eb',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '12px',
-              fontWeight: '500',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#2563eb';
-              e.target.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#2563eb';
-            }}
-          >
-            🔑 Đăng nhập ngay
-          </button>
+        <div className="text-center">
+          <span className="text-muted">Đã có tài khoản? </span>
+          <button onClick={() => navigate('/login')} className="btn btn-link p-0 text-decoration-none fw-semibold"><i className="bi bi-box-arrow-in-right me-1"></i>Đăng nhập ngay</button>
         </div>
       </div>
     </div>

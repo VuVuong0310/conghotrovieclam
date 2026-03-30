@@ -1,254 +1,155 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService';
 import API_BASE from '../config/api';
 
-const JobListAdvanced = () => {
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [keyword, setKeyword] = useState('');
-    const [location, setLocation] = useState('');
-    const [minSalary, setMinSalary] = useState('');
-    const [maxSalary, setMaxSalary] = useState('');
-    const [employmentType, setEmploymentType] = useState('');
-    const [page, setPage] = useState(0);
-    const [size, setSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [sortBy, setSortBy] = useState('createdAt');
-    const [sortDirection, setSortDirection] = useState('DESC');
-    const navigate = useNavigate();
+function JobListAdvanced() {
+  const [jobs, setJobs] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ keyword: '', category: '', location: '', employmentType: '', sortBy: 'newest' });
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-    useEffect(() => {
-        fetchJobs();
-    }, [page, size, sortBy, sortDirection]);
+  useEffect(() => {
+    axios.get(`${API_BASE}/categories`).then(res => setCategories(res.data)).catch(() => {});
+  }, []);
 
-    const fetchJobs = async (searchKeyword = '', searchLocation = '', searchMinSalary = '', 
-                             searchMaxSalary = '', searchEmploymentType = '') => {
-        try {
-            setLoading(true);
-            const token = AuthService.getToken();
-            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+  useEffect(() => {
+    fetchJobs();
+    // eslint-disable-next-line
+  }, [page, filters.sortBy]);
 
-            const params = {
-                page: page,
-                size: size,
-                sortBy: sortBy,
-                sortDirection: sortDirection
-            };
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.keyword) params.append('keyword', filters.keyword);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.location) params.append('location', filters.location);
+      if (filters.employmentType) params.append('employmentType', filters.employmentType);
+      params.append('sort', filters.sortBy);
+      params.append('page', page);
+      params.append('size', 12);
+      const res = await axios.get(`${API_BASE}/jobs/search/advanced?${params.toString()}`);
+      setJobs(res.data.content || res.data || []);
+      setTotalPages(res.data.totalPages || 1);
+    } catch (err) {
+      console.error(err);
+      try {
+        const res = await axios.get(`${API_BASE}/jobs`);
+        setJobs(Array.isArray(res.data) ? res.data : res.data.content || []);
+      } catch (e) { console.error(e); }
+    }
+    setLoading(false);
+  };
 
-            if (searchKeyword) params.keyword = searchKeyword;
-            if (searchLocation) params.location = searchLocation;
-            if (searchMinSalary) params.minSalary = parseFloat(searchMinSalary) * 1000000;
-            if (searchMaxSalary) params.maxSalary = parseFloat(searchMaxSalary) * 1000000;
-            if (searchEmploymentType) params.employmentType = searchEmploymentType;
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPage(0);
+    fetchJobs();
+  };
 
-            const response = await axios.get(`${API_BASE}/search/jobs`, {
-                headers,
-                params
-            });
+  const handleFilterChange = (field, value) => setFilters(prev => ({ ...prev, [field]: value }));
 
-            setJobs(response.data.content || []);
-            setTotalPages(response.data.totalPages || 0);
-            setTotalElements(response.data.totalElements || 0);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching jobs:', error);
-            // Fallback to basic jobs API if search fails
-            try {
-                const response = await axios.get(`${API_BASE}/jobs`);
-                setJobs(response.data);
-            } catch (err) {
-                console.error('Error fetching jobs from basic API:', err);
-            }
-            setLoading(false);
-        }
-    };
+  const formatSalary = (s) => s ? Number(s).toLocaleString('vi-VN') + ' VND' : 'Thỏa thuận';
 
-    const handleSearch = () => {
-        setPage(0);  // Reset to first page
-        fetchJobs(keyword, location, minSalary, maxSalary, employmentType);
-    };
-
-    const handleReset = () => {
-        setKeyword('');
-        setLocation('');
-        setMinSalary('');
-        setMaxSalary('');
-        setEmploymentType('');
-        setPage(0);
-        setSize(10);
-        setSortBy('createdAt');
-        setSortDirection('DESC');
-        fetchJobs();
-    };
-
-    const handlePageChange = (newPage) => {
-        setPage(Math.max(0, Math.min(newPage, totalPages - 1)));
-    };
-
-    if (loading) return <div className="container-fluid text-center py-5">Đang tải...</div>;
-
-    return (
-        <div className="container-fluid job-list-container">
-            <div className="filter-section">
-                <h3>🔍 Tìm Việc Làm</h3>
-                <div className="filter-row">
-                    <input
-                        type="text"
-                        placeholder="Từ khóa (vị trí, kỹ năng)"
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                        className="filter-input"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Địa điểm"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="filter-input"
-                    />
-                    <input
-                        type="number"
-                        placeholder="Lương tối thiểu (triệu VND)"
-                        value={minSalary}
-                        onChange={(e) => setMinSalary(e.target.value)}
-                        className="filter-input"
-                    />
-                    <input
-                        type="number"
-                        placeholder="Lương tối đa (triệu VND)"
-                        value={maxSalary}
-                        onChange={(e) => setMaxSalary(e.target.value)}
-                        className="filter-input"
-                    />
-                    <select
-                        value={employmentType}
-                        onChange={(e) => setEmploymentType(e.target.value)}
-                        className="filter-input"
-                    >
-                        <option value="">-- Loại việc làm --</option>
-                        <option value="Full-time">Toàn thời gian</option>
-                        <option value="Part-time">Bán thời gian</option>
-                        <option value="Contract">Hợp đồng</option>
-                        <option value="Internship">Thực tập</option>
-                    </select>
-                </div>
-
-                <div className="filter-row mt-2">
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="filter-input"
-                    >
-                        <option value="createdAt">Mới nhất</option>
-                        <option value="title">Tiêu đề</option>
-                        <option value="salary">Lương</option>
-                    </select>
-                    <select
-                        value={sortDirection}
-                        onChange={(e) => setSortDirection(e.target.value)}
-                        className="filter-input"
-                    >
-                        <option value="DESC">Giảm dần</option>
-                        <option value="ASC">Tăng dần</option>
-                    </select>
-                    <button onClick={handleSearch} className="btn btn-primary">Tìm kiếm</button>
-                    <button onClick={handleReset} className="btn btn-secondary">Xóa bộ lọc</button>
-                </div>
-
-                <div className="filter-info mt-2">
-                    <small>Tìm thấy <strong>{totalElements}</strong> công việc | Trang <strong>{page + 1}/{Math.max(1, totalPages)}</strong></small>
-                </div>
+  return (
+    <div>
+      {/* Search Hero */}
+      <div className="jp-search-hero">
+        <div className="container">
+          <h2 className="fw-bold text-white mb-3"><i className="bi bi-search me-2"></i>Tìm Kiếm Nâng Cao</h2>
+          <form onSubmit={handleSearch}>
+            <div className="row g-2">
+              <div className="col-md-3">
+                <input type="text" className="form-control" placeholder="Từ khóa..." value={filters.keyword} onChange={e => handleFilterChange('keyword', e.target.value)} />
+              </div>
+              <div className="col-md-2">
+                <select className="form-select" value={filters.category} onChange={e => handleFilterChange('category', e.target.value)}>
+                  <option value="">Tất cả danh mục</option>
+                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <input type="text" className="form-control" placeholder="Địa điểm..." value={filters.location} onChange={e => handleFilterChange('location', e.target.value)} />
+              </div>
+              <div className="col-md-2">
+                <select className="form-select" value={filters.employmentType} onChange={e => handleFilterChange('employmentType', e.target.value)}>
+                  <option value="">Loại hình</option>
+                  <option value="Full-time">Toàn thời gian</option>
+                  <option value="Part-time">Bán thời gian</option>
+                  <option value="Contract">Hợp đồng</option>
+                </select>
+              </div>
+              <div className="col-md-2">
+                <select className="form-select" value={filters.sortBy} onChange={e => handleFilterChange('sortBy', e.target.value)}>
+                  <option value="newest">Mới nhất</option>
+                  <option value="salary_desc">Lương cao nhất</option>
+                  <option value="salary_asc">Lương thấp nhất</option>
+                </select>
+              </div>
+              <div className="col-md-1">
+                <button type="submit" className="btn btn-light w-100"><i className="bi bi-search"></i></button>
+              </div>
             </div>
-
-            <div className="job-list-content">
-                {jobs.length === 0 ? (
-                    <p className="text-center text-muted mt-5">Không tìm thấy công việc phù hợp</p>
-                ) : (
-                    <>
-                        <div className="job-card-grid">
-                            {jobs.map(job => (
-                                <div key={job.id} className="job-card">
-                                    <div className="job-card-header">
-                                        <h5>{job.title}</h5>
-                                        <span className="job-id-badge">#{job.id}</span>
-                                    </div>
-                                    <p className="company-name">👔 {job.employer?.username || 'Công ty'}</p>
-                                    <p className="job-location">📍 {job.location}</p>
-                                    <p className="job-salary">💰 {job.salary ? (job.salary / 1000000).toFixed(1) : 'N/A'}M VND</p>
-                                    <p className="job-type">
-                                        <span className="badge" style={{
-                                            backgroundColor: job.employmentType === 'Full-time' ? '#28a745' :
-                                                           job.employmentType === 'Part-time' ? '#ffc107' :
-                                                           job.employmentType === 'Contract' ? '#17a2b8' : '#6c757d'
-                                        }}>
-                                            {job.employmentType}
-                                        </span>
-                                    </p>
-                                    <p className="job-description">{job.description.substring(0, 100)}...</p>
-                                    <button
-                                        onClick={() => navigate(`/job/${job.id}`)}
-                                        className="btn btn-outline-primary btn-sm"
-                                    >
-                                        Xem chi tiết →
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Pagination Controls */}
-                        <div className="pagination-container mt-4">
-                            <button
-                                onClick={() => handlePageChange(page - 1)}
-                                disabled={page === 0}
-                                className="btn btn-sm btn-outline-secondary"
-                            >
-                                ← Trước
-                            </button>
-                            
-                            <div className="page-indicator">
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    let pageNum = page - 2 + i;
-                                    if (pageNum < 0 || pageNum >= totalPages) return null;
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => setPage(pageNum)}
-                                            className={`btn btn-sm ${page === pageNum ? 'btn-primary' : 'btn-outline-primary'}`}
-                                        >
-                                            {pageNum + 1}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <button
-                                onClick={() => handlePageChange(page + 1)}
-                                disabled={page >= totalPages - 1}
-                                className="btn btn-sm btn-outline-secondary"
-                            >
-                                Sau →
-                            </button>
-
-                            <select
-                                value={size}
-                                onChange={(e) => { setSize(parseInt(e.target.value)); setPage(0); }}
-                                className="filter-input"
-                                style={{ width: '80px' }}
-                            >
-                                <option value="5">5 hàng</option>
-                                <option value="10">10 hàng</option>
-                                <option value="20">20 hàng</option>
-                                <option value="50">50 hàng</option>
-                            </select>
-                        </div>
-                    </>
-                )}
-            </div>
+          </form>
         </div>
-    );
-};
+      </div>
+
+      <div className="jp-container">
+        {loading ? (
+          <div className="jp-loading-page"><div className="jp-spinner"></div></div>
+        ) : jobs.length === 0 ? (
+          <div className="jp-empty-state">
+            <i className="bi bi-inbox"></i>
+            <h5>Không tìm thấy kết quả</h5>
+            <p>Thử thay đổi bộ lọc để tìm kiếm</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-muted mb-3">Tìm thấy <strong>{jobs.length}</strong> công việc phù hợp</p>
+            <div className="row g-3">
+              {jobs.map(job => (
+                <div className="col-md-6 col-lg-4" key={job.id}>
+                  <div className="jp-job-card h-100">
+                    <h6 className="fw-bold mb-2">{job.title}</h6>
+                    <div className="text-muted small mb-2">
+                      <span className="me-3"><i className="bi bi-building me-1"></i>{job.employer?.companyName || 'N/A'}</span>
+                      <span><i className="bi bi-geo-alt me-1"></i>{job.location || 'N/A'}</span>
+                    </div>
+                    <div className="mb-3">
+                      <span className="jp-badge-primary me-2">{job.employmentType || 'Full-time'}</span>
+                      <span className="text-success fw-semibold small"><i className="bi bi-cash-stack me-1"></i>{formatSalary(job.salary)}</span>
+                    </div>
+                    <Link to={`/jobs/${job.id}`} className="btn btn-outline-primary btn-sm w-100"><i className="bi bi-eye me-1"></i>Xem chi tiết</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <nav className="mt-4">
+                <ul className="pagination justify-content-center">
+                  <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setPage(p => p - 1)}><i className="bi bi-chevron-left"></i></button>
+                  </li>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <li className={`page-item ${page === i ? 'active' : ''}`} key={i}>
+                      <button className="page-link" onClick={() => setPage(i)}>{i + 1}</button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${page === totalPages - 1 ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setPage(p => p + 1)}><i className="bi bi-chevron-right"></i></button>
+                  </li>
+                </ul>
+              </nav>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default JobListAdvanced;
