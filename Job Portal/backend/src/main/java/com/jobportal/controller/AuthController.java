@@ -96,6 +96,10 @@ public class AuthController {
             roles.add(userRole);
         } else {
             strRoles.forEach(r -> {
+                // Only allow CANDIDATE or EMPLOYER to be self-assigned via registration
+                if (!"ROLE_CANDIDATE".equals(r) && !"ROLE_EMPLOYER".equals(r)) {
+                    throw new RuntimeException("Error: Role không hợp lệ.");
+                }
                 Role role = roleRepository.findByName(r)
                         .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                 roles.add(role);
@@ -121,7 +125,7 @@ public class AuthController {
         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30));
         userRepository.save(user);
 
-        String resetLink = "http://localhost:3000/jobportal/reset-password?token=" + token;
+        String resetLink = "https://conghotrovieclam.online/reset-password?token=" + token;
         emailService.sendPasswordResetEmail(user.getUsername(), resetLink);
 
         return ResponseEntity.ok(new MessageResponse("Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu."));
@@ -164,6 +168,9 @@ public class AuthController {
         if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Token đã hết hạn. Vui lòng yêu cầu lại."));
         }
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Mật khẩu mới phải có ít nhất 6 ký tự."));
+        }
         user.setPassword(encoder.encode(request.getNewPassword()));
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
@@ -181,7 +188,7 @@ public class AuthController {
             tokenParams.put("code", request.getCredential());
             tokenParams.put("client_id", googleClientId);
             tokenParams.put("client_secret", googleClientSecret);
-            tokenParams.put("redirect_uri", "http://localhost:3000/jobportal/google-callback");
+            tokenParams.put("redirect_uri", "https://conghotrovieclam.online/google-callback");
             tokenParams.put("grant_type", "authorization_code");
 
             org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
@@ -210,6 +217,10 @@ public class AuthController {
             User user;
             if (userOpt.isPresent()) {
                 user = userOpt.get();
+                // Check if account is locked
+                if (!user.isEnabled()) {
+                    return ResponseEntity.status(403).body(new MessageResponse("Tài khoản đã bị khóa."));
+                }
             } else {
                 user = new User();
                 user.setUsername(email);
@@ -232,6 +243,26 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Đăng nhập Google thất bại: " + e.getMessage()));
         }
+    }
+
+    @PostMapping("/reset-password-direct")
+    public ResponseEntity<?> resetPasswordDirect(@RequestBody ResetPasswordDirectRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Email không được để trống."));
+        }
+        Optional<User> userOpt = userRepository.findByUsername(request.getEmail());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Email không tồn tại trong hệ thống."));
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Mật khẩu mới phải có ít nhất 6 ký tự."));
+        }
+        User user = userOpt.get();
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("Đặt lại mật khẩu thành công!"));
     }
 
     @PostMapping("/change-password")
@@ -332,6 +363,15 @@ public class AuthController {
         private String credential;
         public String getCredential() { return credential; }
         public void setCredential(String credential) { this.credential = credential; }
+    }
+
+    static class ResetPasswordDirectRequest {
+        private String email;
+        private String newPassword;
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
     }
 
     static class ChangePasswordRequest {

@@ -4,13 +4,16 @@ import com.jobportal.entity.CandidateProfile;
 import com.jobportal.entity.Education;
 import com.jobportal.entity.Experience;
 import com.jobportal.entity.Project;
+import com.jobportal.entity.User;
 import com.jobportal.repository.CandidateProfileRepository;
 import com.jobportal.repository.EducationRepository;
 import com.jobportal.repository.ExperienceRepository;
 import com.jobportal.repository.ProjectRepository;
+import com.jobportal.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +35,15 @@ public class CandidateDetailController {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    /** Trả về lỗi 403 nếu user đang đăng nhập không phải là chủ của candidateId */
+    private boolean isOwner(Authentication auth, Long candidateId) {
+        Optional<User> user = userRepository.findByUsername(auth.getName());
+        return user.isPresent() && user.get().getId().equals(candidateId);
+    }
+
     // --- Education CRUD ---
 
     @GetMapping("/{candidateId}/educations")
@@ -43,7 +55,10 @@ public class CandidateDetailController {
 
     @PostMapping("/{candidateId}/educations")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> addEducation(@PathVariable Long candidateId, @RequestBody Education education) {
+    public ResponseEntity<?> addEducation(@PathVariable Long candidateId, @RequestBody Education education, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền thêm dữ liệu cho hồ sơ này"));
+        }
         Optional<CandidateProfile> profile = candidateProfileRepository.findById(candidateId);
         if (profile.isEmpty()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Candidate profile not found"));
@@ -57,7 +72,11 @@ public class CandidateDetailController {
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
     public ResponseEntity<?> updateEducation(@PathVariable Long candidateId,
                                               @PathVariable Long educationId,
-                                              @RequestBody Education education) {
+                                              @RequestBody Education education,
+                                              Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền chỉnh sửa dữ liệu này"));
+        }
         Optional<Education> existing = educationRepository.findById(educationId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Education not found"));
@@ -69,7 +88,10 @@ public class CandidateDetailController {
 
     @DeleteMapping("/{candidateId}/educations/{educationId}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> deleteEducation(@PathVariable Long candidateId, @PathVariable Long educationId) {
+    public ResponseEntity<?> deleteEducation(@PathVariable Long candidateId, @PathVariable Long educationId, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền xóa dữ liệu này"));
+        }
         Optional<Education> existing = educationRepository.findById(educationId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Education not found"));
@@ -89,7 +111,10 @@ public class CandidateDetailController {
 
     @PostMapping("/{candidateId}/experiences")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> addExperience(@PathVariable Long candidateId, @RequestBody Experience experience) {
+    public ResponseEntity<?> addExperience(@PathVariable Long candidateId, @RequestBody Experience experience, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền thêm dữ liệu cho hồ sơ này"));
+        }
         Optional<CandidateProfile> profile = candidateProfileRepository.findById(candidateId);
         if (profile.isEmpty()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Candidate profile not found"));
@@ -103,7 +128,11 @@ public class CandidateDetailController {
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
     public ResponseEntity<?> updateExperience(@PathVariable Long candidateId,
                                                @PathVariable Long experienceId,
-                                               @RequestBody Experience experience) {
+                                               @RequestBody Experience experience,
+                                               Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền chỉnh sửa dữ liệu này"));
+        }
         Optional<Experience> existing = experienceRepository.findById(experienceId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Experience not found"));
@@ -115,7 +144,10 @@ public class CandidateDetailController {
 
     @DeleteMapping("/{candidateId}/experiences/{experienceId}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> deleteExperience(@PathVariable Long candidateId, @PathVariable Long experienceId) {
+    public ResponseEntity<?> deleteExperience(@PathVariable Long candidateId, @PathVariable Long experienceId, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền xóa dữ liệu này"));
+        }
         Optional<Experience> existing = experienceRepository.findById(experienceId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Experience not found"));
@@ -135,7 +167,10 @@ public class CandidateDetailController {
 
     @PostMapping("/{candidateId}/projects")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> addProject(@PathVariable Long candidateId, @RequestBody Project project) {
+    public ResponseEntity<?> addProject(@PathVariable Long candidateId, @RequestBody Project project, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền thêm dữ liệu cho hồ sơ này"));
+        }
         Optional<CandidateProfile> profile = candidateProfileRepository.findById(candidateId);
         if (profile.isEmpty()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Candidate profile not found"));
@@ -149,7 +184,11 @@ public class CandidateDetailController {
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
     public ResponseEntity<?> updateProject(@PathVariable Long candidateId,
                                             @PathVariable Long projectId,
-                                            @RequestBody Project project) {
+                                            @RequestBody Project project,
+                                            Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền chỉnh sửa dữ liệu này"));
+        }
         Optional<Project> existing = projectRepository.findById(projectId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Project not found"));
@@ -161,7 +200,10 @@ public class CandidateDetailController {
 
     @DeleteMapping("/{candidateId}/projects/{projectId}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> deleteProject(@PathVariable Long candidateId, @PathVariable Long projectId) {
+    public ResponseEntity<?> deleteProject(@PathVariable Long candidateId, @PathVariable Long projectId, Authentication auth) {
+        if (!isOwner(auth, candidateId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền xóa dữ liệu này"));
+        }
         Optional<Project> existing = projectRepository.findById(projectId);
         if (existing.isEmpty() || !existing.get().getCandidate().getId().equals(candidateId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Project not found"));

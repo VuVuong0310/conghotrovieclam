@@ -11,4 +11,6 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long>, JpaSpec
     List<JobPost> findByStatusAndActive(JobPost.JobStatus status, boolean active);
     List<JobPost> findByEmployer_Id(Long employerId);
     long countByStatus(JobPost.JobStatus status);
+    boolean existsByCategory_Id(Long categoryId);
+    boolean existsByEmployer_Id(Long employerId);
 }

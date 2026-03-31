@@ -4,7 +4,6 @@ com\jobportal\service\UserDetailsServiceImpl.class
 com\jobportal\controller\JobApplicationController$AppliedResponse.class
 com\jobportal\entity\JobPost$JobStatus.class
 com\jobportal\entity\Notification.class
-com\jobportal\controller\CandidateDetailController$MessageResponse.class
 com\jobportal\service\EmployerService.class
 com\jobportal\controller\AuthController$MessageResponse.class
 com\jobportal\repository\JobPostRepository.class
@@ -56,7 +55,6 @@ com\jobportal\controller\AuthController$GoogleLoginRequest.class
 com\jobportal\repository\ExperienceRepository.class
 com\jobportal\controller\JobApplicationController$1.class
 com\jobportal\controller\JobApplicationController$StatusUpdateRequest.class
-com\jobportal\controller\CandidateDetailController.class
 com\jobportal\entity\Education.class
 com\jobportal\controller\NotificationController$NotificationRequest.class
 com\jobportal\controller\NotificationController.class

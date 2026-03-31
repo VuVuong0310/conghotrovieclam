@@ -136,6 +136,16 @@ public class CandidateProfileService {
         return null;
     }
 
+    /** Escape HTML đặc biệt để chống XSS trong CV */
+    private String escHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#x27;");
+    }
+
     public String renderCvHtml(Long userId) {
         Optional<CandidateProfile> profileOpt = candidateProfileRepository.findById(userId);
         if (profileOpt.isEmpty()) {
@@ -185,26 +195,26 @@ public class CandidateProfileService {
         }
 
         // Name & title
-        html.append("<h1>").append(p.getFullName() != null ? p.getFullName() : "N/A").append("</h1>");
+        html.append("<h1>").append(escHtml(p.getFullName() != null ? p.getFullName() : "N/A")).append("</h1>");
         if (p.getBio() != null && !p.getBio().isBlank()) {
-            html.append("<div class='subtitle'>").append(p.getBio()).append("</div>");
+            html.append("<div class='subtitle'>").append(escHtml(p.getBio())).append("</div>");
         }
 
         // Contact info
         html.append("<h2>Thông Tin Liên Hệ</h2>");
-        if (p.getEmail() != null && !p.getEmail().isBlank()) html.append("<div class='info-item'><span class='icon'>📧</span> ").append(p.getEmail()).append("</div>");
-        if (p.getPhone() != null && !p.getPhone().isBlank()) html.append("<div class='info-item'><span class='icon'>📞</span> ").append(p.getPhone()).append("</div>");
-        if (p.getAddress() != null && !p.getAddress().isBlank()) html.append("<div class='info-item'><span class='icon'>📍</span> ").append(p.getAddress()).append("</div>");
-        if (p.getDateOfBirth() != null) html.append("<div class='info-item'><span class='icon'>🎂</span> ").append(p.getDateOfBirth()).append("</div>");
-        if (p.getLinkedinUrl() != null && !p.getLinkedinUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>🔗</span> ").append(p.getLinkedinUrl()).append("</div>");
-        if (p.getGithubUrl() != null && !p.getGithubUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>💻</span> ").append(p.getGithubUrl()).append("</div>");
-        if (p.getPortfolioUrl() != null && !p.getPortfolioUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>🌐</span> ").append(p.getPortfolioUrl()).append("</div>");
+        if (p.getEmail() != null && !p.getEmail().isBlank()) html.append("<div class='info-item'><span class='icon'>📧</span> ").append(escHtml(p.getEmail())).append("</div>");
+        if (p.getPhone() != null && !p.getPhone().isBlank()) html.append("<div class='info-item'><span class='icon'>📞</span> ").append(escHtml(p.getPhone())).append("</div>");
+        if (p.getAddress() != null && !p.getAddress().isBlank()) html.append("<div class='info-item'><span class='icon'>📍</span> ").append(escHtml(p.getAddress())).append("</div>");
+        if (p.getDateOfBirth() != null) html.append("<div class='info-item'><span class='icon'>🎂</span> ").append(escHtml(String.valueOf(p.getDateOfBirth()))).append("</div>");
+        if (p.getLinkedinUrl() != null && !p.getLinkedinUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>🔗</span> ").append(escHtml(p.getLinkedinUrl())).append("</div>");
+        if (p.getGithubUrl() != null && !p.getGithubUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>💻</span> ").append(escHtml(p.getGithubUrl())).append("</div>");
+        if (p.getPortfolioUrl() != null && !p.getPortfolioUrl().isBlank()) html.append("<div class='info-item'><span class='icon'>🌐</span> ").append(escHtml(p.getPortfolioUrl())).append("</div>");
 
         // Skills (technical)
         if (p.getSkills() != null && !p.getSkills().isEmpty()) {
             html.append("<h2>Kỹ Năng Kỹ Thuật</h2>");
             for (String skill : p.getSkills()) {
-                html.append("<div class='skill-bar'><div class='skill-name'>").append(skill).append("</div>");
+                html.append("<div class='skill-bar'><div class='skill-name'>").append(escHtml(skill)).append("</div>");
                 html.append("<div class='bar-bg'><div class='bar-fill'></div></div></div>");
             }
         }
@@ -215,7 +225,7 @@ public class CandidateProfileService {
             html.append("<div style='font-size:13px;line-height:1.7'>");
             for (String line : p.getSoftSkills().split("\\n")) {
                 if (!line.isBlank()) {
-                    html.append("<div style='margin:4px 0'>• ").append(line.trim()).append("</div>");
+                    html.append("<div style='margin:4px 0'>\u2022 ").append(escHtml(line.trim())).append("</div>");
                 }
             }
             html.append("</div>");
@@ -227,7 +237,7 @@ public class CandidateProfileService {
             html.append("<div style='font-size:13px;line-height:1.7'>");
             for (String line : p.getAwards().split("\\n")) {
                 if (!line.isBlank()) {
-                    html.append("<div style='margin:4px 0'>🏆 ").append(line.trim()).append("</div>");
+                    html.append("<div style='margin:4px 0'>\uD83C\uDFC6 ").append(escHtml(line.trim())).append("</div>");
                 }
             }
             html.append("</div>");
@@ -243,11 +253,11 @@ public class CandidateProfileService {
             html.append("<h2>Kinh Nghiệm Làm Việc</h2>");
             for (var exp : p.getExperiences()) {
                 html.append("<div class='exp-block'>");
-                html.append("<div class='exp-header'><span class='exp-title'>").append(exp.getJobTitle() != null ? exp.getJobTitle() : "").append("</span>");
-                html.append("<span class='exp-date'>").append(exp.getStartDate()).append(" - ").append(exp.getCurrentJob() != null && exp.getCurrentJob() ? "Hiện tại" : (exp.getEndDate() != null ? exp.getEndDate() : "")).append("</span></div>");
-                html.append("<div class='exp-company'>").append(exp.getCompanyName() != null ? exp.getCompanyName() : "").append("</div>");
+                html.append("<div class='exp-header'><span class='exp-title'>").append(escHtml(exp.getJobTitle() != null ? exp.getJobTitle() : "")).append("</span>");
+                html.append("<span class='exp-date'>").append(escHtml(String.valueOf(exp.getStartDate()))).append(" - ").append(exp.getCurrentJob() != null && exp.getCurrentJob() ? "Hiện tại" : (exp.getEndDate() != null ? escHtml(String.valueOf(exp.getEndDate())) : "")).append("</span></div>");
+                html.append("<div class='exp-company'>").append(escHtml(exp.getCompanyName() != null ? exp.getCompanyName() : "")).append("</div>");
                 if (exp.getDescription() != null && !exp.getDescription().isBlank()) {
-                    html.append("<div class='exp-desc'>").append(exp.getDescription().replace("\n", "<br/>")).append("</div>");
+                    html.append("<div class='exp-desc'>").append(escHtml(exp.getDescription()).replace("\n", "<br/>")).append("</div>");
                 }
                 html.append("</div>");
             }
@@ -258,11 +268,11 @@ public class CandidateProfileService {
             html.append("<h2>Học Vấn</h2>");
             for (var edu : p.getEducations()) {
                 html.append("<div class='edu-block'>");
-                html.append("<div class='edu-header'><span class='edu-school'>").append(edu.getInstitution() != null ? edu.getInstitution() : "").append("</span>");
-                html.append("<span class='edu-date'>").append(edu.getStartDate() != null ? edu.getStartDate() : "").append(" - ").append(edu.getEndDate() != null ? edu.getEndDate() : "Hiện tại").append("</span></div>");
-                if (edu.getDegree() != null) html.append("<div class='edu-detail'>").append(edu.getDegree()).append("</div>");
-                if (edu.getFieldOfStudy() != null) html.append("<div class='edu-detail'>Chuyên ngành: ").append(edu.getFieldOfStudy()).append("</div>");
-                if (edu.getGpa() != null) html.append("<div class='edu-detail'>GPA: ").append(edu.getGpa()).append("</div>");
+                html.append("<div class='edu-header'><span class='edu-school'>").append(escHtml(edu.getInstitution() != null ? edu.getInstitution() : "")).append("</span>");
+                html.append("<span class='edu-date'>").append(escHtml(edu.getStartDate() != null ? String.valueOf(edu.getStartDate()) : "")).append(" - ").append(escHtml(edu.getEndDate() != null ? String.valueOf(edu.getEndDate()) : "Hiện tại")).append("</span></div>");
+                if (edu.getDegree() != null) html.append("<div class='edu-detail'>").append(escHtml(edu.getDegree())).append("</div>");
+                if (edu.getFieldOfStudy() != null) html.append("<div class='edu-detail'>Chuyên ngành: ").append(escHtml(edu.getFieldOfStudy())).append("</div>");
+                if (edu.getGpa() != null) html.append("<div class='edu-detail'>GPA: ").append(escHtml(String.valueOf(edu.getGpa()))).append("</div>");
                 html.append("</div>");
             }
         }
@@ -272,15 +282,15 @@ public class CandidateProfileService {
             html.append("<h2>Dự Án Tiêu Biểu</h2>");
             for (var proj : p.getProjects()) {
                 html.append("<div class='exp-block'>");
-                html.append("<div class='exp-title'>").append(proj.getProjectName() != null ? proj.getProjectName() : "").append("</div>");
+                html.append("<div class='exp-title'>").append(escHtml(proj.getProjectName() != null ? proj.getProjectName() : "")).append("</div>");
                 if (proj.getTechnology() != null && !proj.getTechnology().isBlank()) {
-                    html.append("<div class='exp-company'>Công nghệ: ").append(proj.getTechnology()).append("</div>");
+                    html.append("<div class='exp-company'>Công nghệ: ").append(escHtml(proj.getTechnology())).append("</div>");
                 }
                 if (proj.getDescription() != null && !proj.getDescription().isBlank()) {
-                    html.append("<div class='exp-desc'>").append(proj.getDescription().replace("\n", "<br/>")).append("</div>");
+                    html.append("<div class='exp-desc'>").append(escHtml(proj.getDescription()).replace("\n", "<br/>")).append("</div>");
                 }
                 if (proj.getRole() != null && !proj.getRole().isBlank()) {
-                    html.append("<div class='exp-desc' style='margin-top:4px'><strong>Vai trò:</strong> ").append(proj.getRole().replace("\n", "<br/>")).append("</div>");
+                    html.append("<div class='exp-desc' style='margin-top:4px'><strong>Vai trò:</strong> ").append(escHtml(proj.getRole()).replace("\n", "<br/>")).append("</div>");
                 }
                 html.append("</div>");
             }

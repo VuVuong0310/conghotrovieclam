@@ -5,10 +5,9 @@ services:
     image: mysql:8.0
     container_name: jobportal-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: jobportal_db
-    ports:
-      - "3307:3306"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    # Không expose port ra ngoài - chỉ nội bộ Docker network
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -18,28 +17,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build: ./backend
     container_name: jobportal-backend
-    ports:
-      - "8080:8080"
+    # Không expose port 8080 ra ngoài - Nginx sẽ proxy
+    expose:
+      - "8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/jobportal_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root123
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: vuvanvuong2004@gmail.com
-      SPRING_MAIL_PASSWORD: "ohhl zboj wndv cgzc"
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
-      JOBPORTAL_JWTSECRET: ChangeThisSecretKeyToSomethingLongerAndMoreSecure1234567890123456789012345678901234567890123456789
-      JOBPORTAL_JWTEXPIRATIONMS: 86400000
-      GOOGLE_CLIENT_ID: 459714649331-mnljcp99f4hsaep940toag14qdep8n0c.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
+      JOBPORTAL_JWTSECRET: ${JWT_SECRET}
+      JOBPORTAL_JWTEXPIRATIONMS: ${JWT_EXPIRATION_MS}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     volumes:
       - backend_uploads:/app/uploads
     depends_on:
@@ -47,6 +48,7 @@ services:
         condition: service_healthy
     networks:
       - jobportal-net
+    restart: unless-stopped
 
   frontend:
     build:
@@ -56,14 +58,31 @@ services:
     container_name: jobportal-frontend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
     depends_on:
       - backend
+    networks:
+      - jobportal-net
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: jobportal-certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - jobportal-net
 
 volumes:
   mysql_data:
   backend_uploads:
+  certbot_www:
+  certbot_conf:
 
 networks:
   jobportal-net:

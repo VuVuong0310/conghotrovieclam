@@ -1,0 +1,24 @@
+# Secrets - KHÔNG commit
+.env
+*.env.local
+*.env.production
+
+# Build outputs
+backend/target/
+frontend/build/
+frontend/node_modules/
+
+# Uploads (user data)
+backend/uploads/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

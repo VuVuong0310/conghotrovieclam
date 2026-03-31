@@ -113,7 +113,7 @@ function App() {
   const isAdmin = userRoles.includes('ROLE_ADMIN');
 
   return (
-    <Router basename="/jobportal">
+    <Router>
       <div className="App">
         <nav className="navbar navbar-expand-lg jp-navbar">
           <div className="container-fluid px-3">
@@ -142,7 +142,7 @@ function App() {
                     {isCandidate && <Link className="nav-link" to={`/profile/${userId || 1}`}><i className="bi bi-person-circle"></i> Hồ Sơ</Link>}
                     <Link className="nav-link" to="/change-password"><i className="bi bi-shield-lock"></i></Link>
                     <NotificationBell />
-                    <button className="nav-link btn-logout ms-1" onClick={() => { AuthService.logout(); window.location.href = '/jobportal/login'; }}>
+                    <button className="nav-link btn-logout ms-1" onClick={() => { AuthService.logout(); setIsLoggedIn(false); setUserRoles([]); setUserId(null); window.location.href = '/login'; }}>
                       <i className="bi bi-box-arrow-right"></i> Đăng Xuất
                     </button>
                   </>

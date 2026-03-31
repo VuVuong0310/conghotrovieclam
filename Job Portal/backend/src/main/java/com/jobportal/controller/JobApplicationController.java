@@ -170,6 +170,19 @@ public class JobApplicationController {
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER')")
     public ResponseEntity<?> getJobApplications(@PathVariable Long jobId, Authentication auth) {
         try {
+            Optional<User> employer = userRepository.findByUsername(auth.getName());
+            if (!employer.isPresent()) {
+                return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
+            }
+            // Verify employer owns this job
+            Optional<JobPost> job = jobPostRepository.findById(jobId);
+            if (!job.isPresent()) {
+                return ResponseEntity.status(404).body(new MessageResponse("Job not found"));
+            }
+            if (job.get().getEmployer() == null ||
+                    !job.get().getEmployer().getId().equals(employer.get().getId())) {
+                return ResponseEntity.status(403).body(new MessageResponse("Không có quyền xem đơn ứng tuyển của công việc này"));
+            }
             List<JobApplication> applications = jobApplicationService.getJobApplications(jobId);
             return ResponseEntity.ok(applications);
         } catch (Exception e) {
@@ -183,6 +196,21 @@ public class JobApplicationController {
                                                      @RequestBody StatusUpdateRequest request,
                                                      Authentication auth) {
         try {
+            Optional<User> employer = userRepository.findByUsername(auth.getName());
+            if (!employer.isPresent()) {
+                return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
+            }
+            // Verify employer owns the job of this application
+            Optional<JobApplication> appOpt = jobApplicationService.getApplicationById(applicationId);
+            if (!appOpt.isPresent()) {
+                return ResponseEntity.status(404).body(new MessageResponse("Application not found"));
+            }
+            JobApplication existingApp = appOpt.get();
+            if (existingApp.getJobPost().getEmployer() == null ||
+                    !existingApp.getJobPost().getEmployer().getId().equals(employer.get().getId())) {
+                return ResponseEntity.status(403).body(new MessageResponse("Không có quyền cập nhật đơn này"));
+            }
+
             JobApplication application = jobApplicationService.updateStatus(applicationId, request.getStatus());
 
             // Create notification for candidate

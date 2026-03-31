@@ -41,7 +41,7 @@ public class JobPost {
     @JsonIgnoreProperties({"password", "roles"})
     private User employer;
 
-    @OneToMany(mappedBy = "jobPost", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "jobPost", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("jobPost")
     private java.util.List<JobApplication> applications = new java.util.ArrayList<>();
 

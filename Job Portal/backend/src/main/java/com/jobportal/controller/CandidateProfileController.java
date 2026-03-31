@@ -1,6 +1,8 @@
 package com.jobportal.controller;
 
 import com.jobportal.entity.CandidateProfile;
+import com.jobportal.entity.User;
+import com.jobportal.repository.UserRepository;
 import com.jobportal.service.CandidateProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -9,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -22,6 +25,9 @@ public class CandidateProfileController {
     @Autowired
     private CandidateProfileService candidateProfileService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/{userId}")
     public Optional<CandidateProfile> getProfile(@PathVariable Long userId) {
         return candidateProfileService.getProfile(userId);
@@ -29,7 +35,12 @@ public class CandidateProfileController {
 
     @PutMapping("/{userId}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> updateProfile(@PathVariable Long userId, @RequestBody CandidateProfile profile) {
+    public ResponseEntity<?> updateProfile(@PathVariable Long userId, @RequestBody CandidateProfile profile, Authentication auth) {
+        // IDOR protection: only the owner can update their own profile
+        Optional<User> currentUser = userRepository.findByUsername(auth.getName());
+        if (currentUser.isEmpty() || !currentUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền chỉnh sửa hồ sơ này"));
+        }
         try {
             return ResponseEntity.ok(candidateProfileService.updateProfile(userId, profile));
         } catch (Exception e) {
@@ -39,7 +50,12 @@ public class CandidateProfileController {
 
     @PostMapping("/{userId}/resume")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> uploadResume(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadResume(@PathVariable Long userId, @RequestParam("file") MultipartFile file, Authentication auth) {
+        // IDOR protection
+        Optional<User> currentUser = userRepository.findByUsername(auth.getName());
+        if (currentUser.isEmpty() || !currentUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền upload resume cho hồ sơ này"));
+        }
         try {
             String filename = candidateProfileService.uploadResume(userId, file);
             return ResponseEntity.ok(new MessageResponse("Resume uploaded successfully!"));
@@ -80,7 +96,12 @@ public class CandidateProfileController {
 
     @PostMapping("/{userId}/photo")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> uploadPhoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadPhoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file, Authentication auth) {
+        // IDOR protection
+        Optional<User> currentUser = userRepository.findByUsername(auth.getName());
+        if (currentUser.isEmpty() || !currentUser.get().getId().equals(userId)) {
+            return ResponseEntity.status(403).body(new MessageResponse("Không có quyền upload ảnh cho hồ sơ này"));
+        }
         try {
             String filename = candidateProfileService.uploadProfileImage(userId, file);
             return ResponseEntity.ok(new MessageResponse("Photo uploaded successfully!"));

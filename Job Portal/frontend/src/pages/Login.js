@@ -19,7 +19,7 @@ function Login() {
 
   const handleGoogleLogin = () => {
     const clientId = '459714649331-mnljcp99f4hsaep940toag14qdep8n0c.apps.googleusercontent.com';
-    const redirectUri = 'http://localhost:3000/jobportal/google-callback';
+    const redirectUri = `${window.location.origin}/google-callback`;
     const scope = 'email profile';
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
     window.location.href = googleAuthUrl;

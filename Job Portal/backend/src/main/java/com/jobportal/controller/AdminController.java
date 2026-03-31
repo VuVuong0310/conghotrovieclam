@@ -3,6 +3,7 @@ package com.jobportal.controller;
 import com.jobportal.entity.JobCategory;
 import com.jobportal.entity.JobPost;
 import com.jobportal.entity.User;
+import com.jobportal.repository.JobApplicationRepository;
 import com.jobportal.repository.JobCategoryRepository;
 import com.jobportal.repository.JobPostRepository;
 import com.jobportal.repository.UserRepository;
@@ -35,6 +36,9 @@ public class AdminController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JobApplicationRepository jobApplicationRepository;
 
     // --- User Management ---
     @GetMapping("/users")
@@ -77,6 +81,16 @@ public class AdminController {
         if (user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()))) {
             return ResponseEntity.badRequest().body(new MessageResponse("Không thể xóa tài khoản Admin"));
         }
+        // Check employer has job posts
+        if (jobPostRepository.existsByEmployer_Id(userId)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(
+                "Không thể xóa người dùng này vì họ có tin tuyển dụng. Hãy xóa tin tuyển dụng trước."));
+        }
+        // Check candidate has job applications
+        if (jobApplicationRepository.existsByCandidate_Id(userId)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(
+                "Không thể xóa người dùng này vì họ có đơn ứng tuyển. Hãy xóa đơn ứng tuyển trước."));
+        }
         userRepository.delete(user);
         return ResponseEntity.ok(new MessageResponse("Đã xóa tài khoản: " + user.getUsername()));
     }
@@ -115,6 +129,11 @@ public class AdminController {
     public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
         if (!jobPostRepository.existsById(jobId)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Job not found"));
+        }
+        // Prevent deleting job that has applications
+        if (jobApplicationRepository.existsByJobPost_Id(jobId)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(
+                "Không thể xóa tin tuyển dụng này vì đã có đơn ứng tuyển. Hãy xóa các đơn ứng tuyển trước."));
         }
         jobPostRepository.deleteById(jobId);
         return ResponseEntity.ok(new MessageResponse("Đã xóa tin tuyển dụng"));
@@ -214,8 +233,13 @@ public class AdminController {
         if (!jobCategoryRepository.existsById(id)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Category not found"));
         }
+        // Prevent deleting category that has job posts referencing it
+        if (jobPostRepository.existsByCategory_Id(id)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(
+                "Không thể xóa danh mục này vì có tin tuyển dụng đang sử dụng. Hãy đổi danh mục cho các tin đó trước."));
+        }
         jobCategoryRepository.deleteById(id);
-        return ResponseEntity.ok(new MessageResponse("Category deleted"));
+        return ResponseEntity.ok(new MessageResponse("Đã xóa danh mục"));
     }
 
     @PostMapping("/test-email")

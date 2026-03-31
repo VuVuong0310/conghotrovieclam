@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/search")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -17,6 +19,10 @@ public class SearchController {
 
     @Autowired
     private JobSearchService jobSearchService;
+
+    // Whitelist các field được phép sort để tránh lỗi và information disclosure
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+            Set.of("id", "title", "salary", "location", "createdAt", "deadline", "employmentType");
 
     @GetMapping("/jobs")
     public ResponseEntity<?> searchJobs(
@@ -31,13 +37,26 @@ public class SearchController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
         
         try {
-            Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+            // Validate sortBy whitelist to prevent arbitrary field injection
+            if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
+                sortBy = "id";
+            }
+            // Validate page/size bounds
+            if (page < 0) page = 0;
+            if (size < 1 || size > 100) size = 10;
+
+            Sort.Direction direction;
+            try {
+                direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                direction = Sort.Direction.DESC;
+            }
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             
             Page<JobPost> result = jobSearchService.searchJobs(keyword, location, minSalary, maxSalary, employmentType, pageable);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error searching jobs: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error searching jobs");
         }
     }
 
