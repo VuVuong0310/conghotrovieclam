@@ -1,9 +1,11 @@
 /* ============================================
    JOB PORTAL - Professional Design System 2026
    Built on Bootstrap 5 + Inter Font
+   v2
    ============================================ */
 
 :root {
+  --jp-build: 2;
   --jp-primary: #1a56db;
   --jp-primary-hover: #1648b3;
   --jp-primary-light: #e8f0fe;

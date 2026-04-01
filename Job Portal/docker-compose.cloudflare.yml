@@ -68,11 +68,10 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: jobportal-cloudflared
-    command: tunnel --no-autoupdate run
+    command: tunnel --no-autoupdate --protocol http2 run
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN}
-    networks:
-      - jobportal-net
+    network_mode: "service:frontend"
     depends_on:
       - frontend
     restart: unless-stopped

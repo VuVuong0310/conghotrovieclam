@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/jobportal/static/css/main.c1d0c6a5.css",
-    "main.js": "/jobportal/static/js/main.b732068d.js",
-    "static/media/bootstrap-icons.woff?": "/jobportal/static/media/bootstrap-icons.39795c0b4513de014cf8.woff",
-    "static/media/bootstrap-icons.woff2?": "/jobportal/static/media/bootstrap-icons.b7bcc075b395c14ce8c2.woff2",
-    "index.html": "/jobportal/index.html",
-    "main.c1d0c6a5.css.map": "/jobportal/static/css/main.c1d0c6a5.css.map",
-    "main.b732068d.js.map": "/jobportal/static/js/main.b732068d.js.map"
+    "main.css": "/static/css/main.c55a988c.css",
+    "main.js": "/static/js/main.768e892a.js",
+    "static/media/bootstrap-icons.woff?": "/static/media/bootstrap-icons.39795c0b4513de014cf8.woff",
+    "static/media/bootstrap-icons.woff2?": "/static/media/bootstrap-icons.b7bcc075b395c14ce8c2.woff2",
+    "index.html": "/index.html",
+    "main.c55a988c.css.map": "/static/css/main.c55a988c.css.map",
+    "main.768e892a.js.map": "/static/js/main.768e892a.js.map"
   },
   "entrypoints": [
-    "static/css/main.c1d0c6a5.css",
-    "static/js/main.b732068d.js"
+    "static/css/main.c55a988c.css",
+    "static/js/main.768e892a.js"
   ]
 }
