@@ -84,8 +84,9 @@ public class CandidateProfileController {
     }
 
     @GetMapping("/{userId}/cv")
-    public ResponseEntity<?> renderCv(@PathVariable Long userId) {
-        String html = candidateProfileService.renderCvHtml(userId);
+    public ResponseEntity<?> renderCv(@PathVariable Long userId,
+            @RequestParam(value = "template", defaultValue = "classic") String template) {
+        String html = candidateProfileService.renderCvHtml(userId, template);
         if (html == null) {
             return ResponseEntity.notFound().build();
         }

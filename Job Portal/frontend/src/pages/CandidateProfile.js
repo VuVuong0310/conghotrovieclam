@@ -126,8 +126,16 @@ function CandidateProfile() {
   const handleEditProj = (proj) => { setEditingProjId(proj.id); setProjForm({ projectName: proj.projectName || '', technology: proj.technology || '', description: proj.description || '', role: proj.role || '' }); };
   const handleDeleteProj = async (id) => { if (!window.confirm('Xóa dự án này?')) return; try { await ProjectService.deleteProject(userId, id); loadProjects(); } catch (e) { alert('Lỗi khi xóa'); } };
 
-  const viewCV = () => window.open(`${API_BASE}/profile/${userId}/cv`, '_blank');
+  const [cvTemplate, setCvTemplate] = useState('classic');
+  const viewCV = () => window.open(`${API_BASE}/profile/${userId}/cv?template=${cvTemplate}`, '_blank');
   const viewResume = () => window.open(`${API_BASE}/profile/${userId}/resume`, '_blank');
+
+  const cvTemplates = [
+    { key: 'classic', label: 'Classic', desc: 'Sidebar xanh đậm, 2 cột truyền thống', color: '#2c3e50' },
+    { key: 'modern', label: 'Modern', desc: 'Header gradient tím, bo tròn hiện đại', color: '#764ba2' },
+    { key: 'minimal', label: 'Minimal', desc: 'Đơn giản, 1 cột, font serif thanh lịch', color: '#222' },
+    { key: 'elegant', label: 'Elegant', desc: 'Xanh navy + vàng gold sang trọng', color: '#0c2340' },
+  ];
 
   const tabs = [
     { key: 'profile', label: 'Hồ sơ', icon: 'bi-person' },
@@ -228,10 +236,36 @@ function CandidateProfile() {
                 </div>
               </div>
 
-              <div className="d-flex gap-2 mt-4 pt-3 border-top">
-                <button type="submit" className="btn btn-primary"><i className="bi bi-check-lg me-1"></i>Lưu Hồ Sơ</button>
-                <button type="button" className="btn btn-outline-primary" onClick={viewCV}><i className="bi bi-file-earmark-text me-1"></i>Xem CV</button>
-                <button type="button" className="btn btn-outline-secondary" onClick={viewResume}><i className="bi bi-paperclip me-1"></i>Xem Resume</button>
+              <div className="mt-4 pt-3 border-top">
+                <div className="d-flex gap-2 mb-3">
+                  <button type="submit" className="btn btn-primary"><i className="bi bi-check-lg me-1"></i>Lưu Hồ Sơ</button>
+                  <button type="button" className="btn btn-outline-primary" onClick={viewCV}><i className="bi bi-file-earmark-text me-1"></i>Xem CV</button>
+                  <button type="button" className="btn btn-outline-secondary" onClick={viewResume}><i className="bi bi-paperclip me-1"></i>Xem Resume</button>
+                </div>
+                <div>
+                  <label className="form-label fw-semibold"><i className="bi bi-palette me-1"></i>Chọn mẫu CV</label>
+                  <div className="row g-2">
+                    {cvTemplates.map(t => (
+                      <div className="col-md-3 col-6" key={t.key}>
+                        <div onClick={() => setCvTemplate(t.key)}
+                          className="p-3 rounded-3 text-center border"
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: cvTemplate === t.key ? t.color : '#e5e7eb',
+                            borderWidth: cvTemplate === t.key ? 2 : 1,
+                            background: cvTemplate === t.key ? t.color + '0d' : '#fff',
+                            transition: 'all .2s'
+                          }}>
+                          <div className="rounded-2 mx-auto mb-2" style={{ width: 40, height: 40, background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <i className="bi bi-file-earmark-text" style={{ color: '#fff', fontSize: 18 }}></i>
+                          </div>
+                          <div className="fw-semibold" style={{ fontSize: 13 }}>{t.label}</div>
+                          <div className="text-muted" style={{ fontSize: 11 }}>{t.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </form>
           </div>
