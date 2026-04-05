@@ -148,7 +148,7 @@ public class CandidateProfileService {
 
     public String renderCvHtml(Long userId, String template) {
         // Whitelist templates
-        if (template == null || !List.of("classic", "modern", "minimal", "elegant").contains(template)) {
+        if (template == null || !List.of("classic", "modern", "minimal", "elegant", "creative", "executive", "developer", "academic").contains(template)) {
             template = "classic";
         }
         Optional<CandidateProfile> profileOpt = candidateProfileRepository.findById(userId);
@@ -160,6 +160,10 @@ public class CandidateProfileService {
             case "modern" -> renderModernTemplate(p, userId);
             case "minimal" -> renderMinimalTemplate(p, userId);
             case "elegant" -> renderElegantTemplate(p, userId);
+            case "creative" -> renderCreativeTemplate(p, userId);
+            case "executive" -> renderExecutiveTemplate(p, userId);
+            case "developer" -> renderDeveloperTemplate(p, userId);
+            case "academic" -> renderAcademicTemplate(p, userId);
             default -> renderClassicTemplate(p, userId);
         };
     }
@@ -627,6 +631,276 @@ public class CandidateProfileService {
         html.append("</div>");
         html.append("</body></html>");
         return html.toString();
+    }
+
+    // ========================= CREATIVE TEMPLATE =========================
+    private String renderCreativeTemplate(CandidateProfile p, Long userId) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>");
+        html.append("*{margin:0;padding:0;box-sizing:border-box}");
+        html.append("body{font-family:'Segoe UI',sans-serif;background:#f0f0f0;display:flex;justify-content:center;padding:20px}");
+        html.append(".cv{width:900px;background:#fff;overflow:hidden;box-shadow:0 0 30px rgba(0,0,0,.1)}");
+        html.append(".header{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;padding:40px;display:flex;align-items:center;gap:30px}");
+        html.append(".photo{width:140px;height:140px;border-radius:20px;border:4px solid rgba(255,255,255,.5);object-fit:cover}");
+        html.append(".photo-placeholder{width:140px;height:140px;border-radius:20px;border:4px solid rgba(255,255,255,.5);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:50px}");
+        html.append(".header-info h1{font-size:28px;margin-bottom:5px}.header-info .title{font-size:16px;opacity:.9}");
+        html.append(".header-info .contact{margin-top:10px;font-size:13px;opacity:.85}");
+        html.append(".body{display:grid;grid-template-columns:1fr 1fr;gap:0}");
+        html.append(".col{padding:25px 30px}");
+        html.append(".col:first-child{border-right:1px solid #eee}");
+        html.append("h2{font-size:16px;color:#e74c3c;text-transform:uppercase;letter-spacing:2px;margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid #e74c3c}");
+        html.append("h2:first-child{margin-top:0}");
+        html.append(".item{margin-bottom:15px}.item-title{font-weight:700;font-size:14px;color:#333}");
+        html.append(".item-sub{font-size:13px;color:#e74c3c;font-weight:600}.item-date{font-size:12px;color:#999}");
+        html.append(".item-desc{font-size:13px;color:#555;line-height:1.6;margin-top:4px}");
+        html.append(".skill-tag{display:inline-block;background:#fde8e7;color:#e74c3c;padding:4px 12px;border-radius:15px;font-size:12px;margin:3px 4px 3px 0}");
+        html.append(".soft-tag{display:inline-block;background:#fff3e0;color:#e65100;padding:4px 12px;border-radius:15px;font-size:12px;margin:3px 4px 3px 0}");
+        html.append("</style></head><body>");
+        html.append("<div class='cv'>");
+
+        // Header
+        html.append("<div class='header'>");
+        appendPhotoHtml(html, p, userId, "photo", "photo-placeholder");
+        html.append("<div class='header-info'>");
+        html.append("<h1>").append(escHtml(p.getFullName() != null ? p.getFullName() : "")).append("</h1>");
+        if (p.getBio() != null) html.append("<div class='title'>").append(escHtml(p.getBio())).append("</div>");
+        html.append("<div class='contact'>");
+        if (p.getEmail() != null) html.append("&#9993; ").append(escHtml(p.getEmail())).append(" &nbsp; ");
+        if (p.getPhone() != null) html.append("&#9742; ").append(escHtml(p.getPhone())).append(" &nbsp; ");
+        if (p.getAddress() != null) html.append("&#9873; ").append(escHtml(p.getAddress()));
+        html.append("</div></div></div>");
+
+        // Body
+        html.append("<div class='body'>");
+
+        // Left column
+        html.append("<div class='col'>");
+        appendExperienceHtml(html, p);
+        appendProjectsHtml(html, p);
+        html.append("</div>");
+
+        // Right column
+        html.append("<div class='col'>");
+        appendEducationHtml(html, p);
+        if (p.getSkills() != null && !p.getSkills().isEmpty()) {
+            html.append("<h2>K&#7929; n&#259;ng</h2>");
+            for (String s : p.getSkills()) {
+                html.append("<span class='skill-tag'>").append(escHtml(s.trim())).append("</span>");
+            }
+        }
+        if (p.getSoftSkills() != null && !p.getSoftSkills().isEmpty()) {
+            html.append("<h2>K&#7929; n&#259;ng m&#7873;m</h2>");
+            for (String s : p.getSoftSkills().split(",")) {
+                html.append("<span class='soft-tag'>").append(escHtml(s.trim())).append("</span>");
+            }
+        }
+        appendAwards(html, p);
+        html.append("</div>");
+
+        html.append("</div></div></body></html>");
+        return html.toString();
+    }
+
+    // ========================= EXECUTIVE TEMPLATE =========================
+    private String renderExecutiveTemplate(CandidateProfile p, Long userId) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>");
+        html.append("*{margin:0;padding:0;box-sizing:border-box}");
+        html.append("body{font-family:Georgia,'Times New Roman',serif;background:#f5f0eb;display:flex;justify-content:center;padding:20px}");
+        html.append(".cv{width:900px;background:#fff;box-shadow:0 0 20px rgba(0,0,0,.1)}");
+        html.append(".header{text-align:center;padding:50px 40px 30px;border-bottom:3px double #8b7355}");
+        html.append(".photo{width:120px;height:120px;border-radius:50%;border:3px solid #8b7355;object-fit:cover;display:block;margin:0 auto 15px}");
+        html.append(".photo-placeholder{width:120px;height:120px;border-radius:50%;border:3px solid #8b7355;background:#f5f0eb;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:40px;color:#8b7355}");
+        html.append(".header h1{font-size:32px;color:#333;font-weight:400;letter-spacing:3px;text-transform:uppercase}");
+        html.append(".header .divider{width:60px;height:2px;background:#8b7355;margin:10px auto}");
+        html.append(".header .contact{font-size:13px;color:#666;margin-top:8px}");
+        html.append(".content{padding:30px 50px 40px}");
+        html.append("h2{font-size:15px;text-transform:uppercase;letter-spacing:3px;color:#8b7355;margin:30px 0 15px;text-align:center}");
+        html.append("h2:first-child{margin-top:0}");
+        html.append(".sep{width:100%;height:1px;background:#ddd;margin:5px 0 15px}");
+        html.append(".item{margin-bottom:18px}.item-title{font-weight:700;font-size:15px;color:#333}");
+        html.append(".item-sub{font-size:14px;color:#8b7355;font-style:italic}.item-date{font-size:12px;color:#999}");
+        html.append(".item-desc{font-size:13px;color:#555;line-height:1.8;margin-top:5px}");
+        html.append(".skills-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}");
+        html.append(".skill-pill{border:1px solid #8b7355;color:#8b7355;padding:5px 16px;border-radius:3px;font-size:12px;font-family:'Segoe UI',sans-serif}");
+        html.append("</style></head><body>");
+        html.append("<div class='cv'>");
+
+        // Header
+        html.append("<div class='header'>");
+        appendPhotoHtml(html, p, userId, "photo", "photo-placeholder");
+        html.append("<h1>").append(escHtml(p.getFullName() != null ? p.getFullName() : "")).append("</h1>");
+        html.append("<div class='divider'></div>");
+        if (p.getBio() != null) html.append("<div style='font-style:italic;color:#666;font-size:14px'>").append(escHtml(p.getBio())).append("</div>");
+        html.append("<div class='contact'>");
+        if (p.getEmail() != null) html.append(escHtml(p.getEmail()));
+        if (p.getPhone() != null) html.append(" &bull; ").append(escHtml(p.getPhone()));
+        if (p.getAddress() != null) html.append(" &bull; ").append(escHtml(p.getAddress()));
+        html.append("</div></div>");
+
+        // Content
+        html.append("<div class='content'>");
+        appendExperienceHtml(html, p);
+        html.append("<div class='sep'></div>");
+        appendEducationHtml(html, p);
+        html.append("<div class='sep'></div>");
+        appendProjectsHtml(html, p);
+        if (p.getSkills() != null && !p.getSkills().isEmpty()) {
+            html.append("<div class='sep'></div>");
+            html.append("<h2>Chuy&#234;n m&#244;n</h2>");
+            html.append("<div class='skills-grid'>");
+            for (String s : p.getSkills()) {
+                html.append("<span class='skill-pill'>").append(escHtml(s.trim())).append("</span>");
+            }
+            html.append("</div>");
+        }
+        appendAwards(html, p);
+        html.append("</div></div></body></html>");
+        return html.toString();
+    }
+
+    // ========================= DEVELOPER TEMPLATE =========================
+    private String renderDeveloperTemplate(CandidateProfile p, Long userId) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>");
+        html.append("*{margin:0;padding:0;box-sizing:border-box}");
+        html.append("body{font-family:'Consolas','Courier New',monospace;background:#1e1e1e;display:flex;justify-content:center;padding:20px}");
+        html.append(".cv{width:900px;background:#252526;color:#d4d4d4;box-shadow:0 0 30px rgba(0,0,0,.5)}");
+        html.append(".topbar{background:#007acc;padding:8px 20px;font-size:12px;color:#fff;display:flex;justify-content:space-between}");
+        html.append(".header{padding:30px;display:flex;gap:25px;border-bottom:1px solid #3c3c3c}");
+        html.append(".photo{width:100px;height:100px;border-radius:8px;border:2px solid #007acc;object-fit:cover}");
+        html.append(".photo-placeholder{width:100px;height:100px;border-radius:8px;border:2px solid #007acc;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-size:36px;color:#007acc}");
+        html.append(".header-info h1{font-size:24px;color:#569cd6}.header-info .bio{color:#6a9955;font-size:13px;margin:5px 0}");
+        html.append(".header-info .contact{font-size:12px;color:#9cdcfe}");
+        html.append(".header-info .contact a{color:#9cdcfe;text-decoration:none}");
+        html.append(".body{display:flex}.sidebar{width:280px;background:#1e1e1e;padding:20px;border-right:1px solid #3c3c3c}");
+        html.append(".main{flex:1;padding:20px 25px}");
+        html.append("h2{font-size:14px;color:#c586c0;text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;font-family:'Segoe UI',sans-serif}");
+        html.append("h2:first-child{margin-top:0}");
+        html.append(".comment{color:#6a9955;font-size:12px;margin-bottom:8px}");
+        html.append(".item{margin-bottom:14px;padding-left:12px;border-left:2px solid #3c3c3c}");
+        html.append(".item-title{font-weight:700;font-size:14px;color:#4ec9b0}");
+        html.append(".item-sub{font-size:13px;color:#dcdcaa}.item-date{font-size:11px;color:#808080}");
+        html.append(".item-desc{font-size:12px;color:#d4d4d4;line-height:1.6;margin-top:4px}");
+        html.append(".skill-chip{display:inline-block;background:#264f78;color:#9cdcfe;padding:3px 10px;border-radius:3px;font-size:11px;margin:2px 3px 2px 0}");
+        html.append(".soft-chip{display:inline-block;background:#4d3319;color:#ce9178;padding:3px 10px;border-radius:3px;font-size:11px;margin:2px 3px 2px 0}");
+        html.append("</style></head><body>");
+        html.append("<div class='cv'>");
+
+        // Top bar
+        html.append("<div class='topbar'><span>&#9654; ").append(escHtml(p.getFullName() != null ? p.getFullName() : "Developer")).append(" - CV</span><span>UTF-8 &nbsp; LF</span></div>");
+
+        // Header
+        html.append("<div class='header'>");
+        appendPhotoHtml(html, p, userId, "photo", "photo-placeholder");
+        html.append("<div class='header-info'>");
+        html.append("<h1>").append(escHtml(p.getFullName() != null ? p.getFullName() : "")).append("</h1>");
+        if (p.getBio() != null) html.append("<div class='bio'>// ").append(escHtml(p.getBio())).append("</div>");
+        html.append("<div class='contact'>");
+        if (p.getEmail() != null) html.append("email: ").append(escHtml(p.getEmail())).append(" &nbsp;|&nbsp; ");
+        if (p.getPhone() != null) html.append("tel: ").append(escHtml(p.getPhone())).append(" &nbsp;|&nbsp; ");
+        if (p.getGithubUrl() != null) html.append("github: ").append(escHtml(p.getGithubUrl()));
+        else if (p.getAddress() != null) html.append("loc: ").append(escHtml(p.getAddress()));
+        html.append("</div></div></div>");
+
+        // Body
+        html.append("<div class='body'>");
+
+        // Sidebar
+        html.append("<div class='sidebar'>");
+        if (p.getSkills() != null && !p.getSkills().isEmpty()) {
+            html.append("<h2>// Tech Stack</h2>");
+            for (String s : p.getSkills()) {
+                html.append("<span class='skill-chip'>").append(escHtml(s.trim())).append("</span>");
+            }
+        }
+        if (p.getSoftSkills() != null && !p.getSoftSkills().isEmpty()) {
+            html.append("<h2>// Soft Skills</h2>");
+            for (String s : p.getSoftSkills().split(",")) {
+                html.append("<span class='soft-chip'>").append(escHtml(s.trim())).append("</span>");
+            }
+        }
+        appendAwards(html, p);
+        html.append("</div>");
+
+        // Main
+        html.append("<div class='main'>");
+        html.append("<div class='comment'>/* Work Experience */</div>");
+        appendExperienceHtml(html, p);
+        html.append("<div class='comment'>/* Education */</div>");
+        appendEducationHtml(html, p);
+        html.append("<div class='comment'>/* Projects */</div>");
+        appendProjectsHtml(html, p);
+        html.append("</div>");
+
+        html.append("</div></div></body></html>");
+        return html.toString();
+    }
+
+    // ========================= ACADEMIC TEMPLATE =========================
+    private String renderAcademicTemplate(CandidateProfile p, Long userId) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'/><style>");
+        html.append("*{margin:0;padding:0;box-sizing:border-box}");
+        html.append("body{font-family:'Palatino Linotype','Book Antiqua',Palatino,serif;background:#f9f6f1;display:flex;justify-content:center;padding:20px}");
+        html.append(".cv{width:800px;background:#fff;padding:50px 60px;box-shadow:0 0 15px rgba(0,0,0,.08)}");
+        html.append(".header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #2c5282}");
+        html.append(".photo{width:100px;height:100px;border-radius:50%;border:2px solid #2c5282;object-fit:cover;display:block;margin:0 auto 12px}");
+        html.append(".photo-placeholder{width:100px;height:100px;border-radius:50%;border:2px solid #2c5282;background:#ebf0f7;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:36px;color:#2c5282}");
+        html.append(".header h1{font-size:28px;color:#1a202c;font-weight:400;letter-spacing:1px}");
+        html.append(".header .subtitle{font-size:14px;color:#4a5568;font-style:italic;margin:5px 0}");
+        html.append(".header .contact{font-size:12px;color:#718096;margin-top:8px}");
+        html.append(".header .contact a{color:#2c5282;text-decoration:none}");
+        html.append("h2{font-size:14px;text-transform:uppercase;letter-spacing:2px;color:#2c5282;margin:25px 0 10px;padding-bottom:4px;border-bottom:1px solid #cbd5e0}");
+        html.append("h2:first-child{margin-top:0}");
+        html.append(".item{margin-bottom:14px}.item-title{font-weight:700;font-size:14px;color:#1a202c}");
+        html.append(".item-sub{font-size:13px;color:#2c5282}.item-date{font-size:12px;color:#a0aec0;font-style:italic}");
+        html.append(".item-desc{font-size:13px;color:#4a5568;line-height:1.8;margin-top:4px;text-align:justify}");
+        html.append(".two-col{display:grid;grid-template-columns:1fr 1fr;gap:15px 30px}");
+        html.append(".skill-item{font-size:13px;color:#4a5568;padding:3px 0;border-bottom:1px dotted #e2e8f0}");
+        html.append("</style></head><body>");
+        html.append("<div class='cv'>");
+
+        // Header
+        html.append("<div class='header'>");
+        appendPhotoHtml(html, p, userId, "photo", "photo-placeholder");
+        html.append("<h1>").append(escHtml(p.getFullName() != null ? p.getFullName() : "")).append("</h1>");
+        if (p.getBio() != null) html.append("<div class='subtitle'>").append(escHtml(p.getBio())).append("</div>");
+        html.append("<div class='contact'>");
+        if (p.getEmail() != null) html.append(escHtml(p.getEmail()));
+        if (p.getPhone() != null) html.append(" | ").append(escHtml(p.getPhone()));
+        if (p.getAddress() != null) html.append(" | ").append(escHtml(p.getAddress()));
+        if (p.getLinkedinUrl() != null) html.append("<br><a href='").append(escHtml(p.getLinkedinUrl())).append("'>LinkedIn</a>");
+        if (p.getGithubUrl() != null) html.append(" | <a href='").append(escHtml(p.getGithubUrl())).append("'>GitHub</a>");
+        html.append("</div></div>");
+
+        // Education first (academic focus)
+        appendEducationHtml(html, p);
+        appendExperienceHtml(html, p);
+        appendProjectsHtml(html, p);
+
+        if (p.getSkills() != null && !p.getSkills().isEmpty()) {
+            html.append("<h2>K&#7929; n&#259;ng chuy&#234;n m&#244;n</h2>");
+            html.append("<div class='two-col'>");
+            for (String s : p.getSkills()) {
+                html.append("<div class='skill-item'>&#8226; ").append(escHtml(s.trim())).append("</div>");
+            }
+            html.append("</div>");
+        }
+        appendAwards(html, p);
+
+        html.append("</div></body></html>");
+        return html.toString();
+    }
+
+    // Helper: render photo or placeholder
+    private void appendPhotoHtml(StringBuilder html, CandidateProfile p, Long userId, String photoClass, String placeholderClass) {
+        if (p.getProfileImagePath() != null) {
+            html.append("<img class='").append(photoClass).append("' src='/api/profile/").append(userId).append("/photo' alt='Photo'/>");
+        } else {
+            String initial = (p.getFullName() != null && !p.getFullName().isEmpty()) ? String.valueOf(p.getFullName().charAt(0)).toUpperCase() : "?";
+            html.append("<div class='").append(placeholderClass).append("'>").append(initial).append("</div>");
+        }
     }
 
 }

@@ -135,6 +135,10 @@ function CandidateProfile() {
     { key: 'modern', label: 'Modern', desc: 'Header gradient tím, bo tròn hiện đại', color: '#764ba2' },
     { key: 'minimal', label: 'Minimal', desc: 'Đơn giản, 1 cột, font serif thanh lịch', color: '#222' },
     { key: 'elegant', label: 'Elegant', desc: 'Xanh navy + vàng gold sang trọng', color: '#0c2340' },
+    { key: 'creative', label: 'Creative', desc: 'Đỏ nổi bật, 2 cột grid sáng tạo', color: '#e74c3c' },
+    { key: 'executive', label: 'Executive', desc: 'Cổ điển sang trọng, font serif cao cấp', color: '#8b7355' },
+    { key: 'developer', label: 'Developer', desc: 'Dark theme phong cách VS Code', color: '#007acc' },
+    { key: 'academic', label: 'Academic', desc: 'Học thuật, giáo dục ưu tiên đầu', color: '#2c5282' },
   ];
 
   const tabs = [
