@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import HomePage from './pages/HomePage';
 import JobList from './pages/JobList';
 import JobListAdvanced from './pages/JobListAdvanced';
 import JobRecommendations from './pages/JobRecommendations';
@@ -15,6 +16,9 @@ import EmployerDashboard from './pages/EmployerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import GoogleCallback from './pages/GoogleCallback';
 import ChangePassword from './pages/ChangePassword';
+import CompanyList from './pages/CompanyList';
+import AboutPage from './pages/AboutPage';
+import AccountInfo from './pages/AccountInfo';
 import AuthService from './services/AuthService';
 import NotificationService from './services/NotificationService';
 import './App.css';
@@ -119,7 +123,7 @@ function App() {
       <div className="App">
         <nav className="navbar navbar-expand-lg jp-navbar">
           <div className="container-fluid px-3">
-            <Link to="/jobs" className="navbar-brand">
+            <Link to="/" className="navbar-brand">
               <i className="bi bi-briefcase-fill"></i> JobPortal
             </Link>
             <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -127,9 +131,12 @@ function App() {
             </button>
             <div className="collapse navbar-collapse" id="navMain">
               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                <li className="nav-item"><Link className="nav-link" to="/"><i className="bi bi-house"></i> Trang Chủ</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/about"><i className="bi bi-info-circle"></i> Giới Thiệu</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/jobs"><i className="bi bi-search"></i> Tìm Việc</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/companies"><i className="bi bi-building"></i> Công Ty</Link></li>
                 {isLoggedIn && (
                   <>
-                    <li className="nav-item"><Link className="nav-link" to="/jobs"><i className="bi bi-search"></i> Tìm Việc</Link></li>
                     {isCandidate && <li className="nav-item"><Link className="nav-link" to="/recommendations"><i className="bi bi-star"></i> Đề Xuất</Link></li>}
                     {isCandidate && <li className="nav-item"><Link className="nav-link" to="/my-applications"><i className="bi bi-file-earmark-text"></i> Đơn Ứng Tuyển</Link></li>}
                     {(isEmployer || isAdmin) && <li className="nav-item"><Link className="nav-link" to="/create-job"><i className="bi bi-plus-circle"></i> Đăng Tuyển</Link></li>}
@@ -141,10 +148,9 @@ function App() {
               <div className="d-flex align-items-center gap-1">
                 {isLoggedIn ? (
                   <>
-                    {isCandidate && <Link className="nav-link" to={`/profile/${userId || 1}`}><i className="bi bi-person-circle"></i> Hồ Sơ</Link>}
-                    <Link className="nav-link" to="/change-password"><i className="bi bi-shield-lock"></i></Link>
+                    <Link className="nav-link" to="/account"><i className="bi bi-person-circle"></i> Tài Khoản</Link>
                     <NotificationBell />
-                    <button className="nav-link btn-logout ms-1" onClick={() => { AuthService.logout(); setIsLoggedIn(false); setUserRoles([]); setUserId(null); window.location.href = BASE_PATH + '/login'; }}>
+                    <button className="nav-link btn-logout ms-1" onClick={() => { AuthService.logout(); setIsLoggedIn(false); setUserRoles([]); setUserId(null); window.location.href = BASE_PATH + '/'; }}>
                       <i className="bi bi-box-arrow-right"></i> Đăng Xuất
                     </button>
                   </>
@@ -168,6 +174,9 @@ function App() {
           <Route path="/change-password" element={isLoggedIn ? <ChangePassword /> : <Navigate to="/login" />} />
           <Route path="/jobs" element={<JobList />} />
           <Route path="/jobs-advanced" element={<JobListAdvanced />} />
+          <Route path="/companies" element={<CompanyList />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/account" element={isLoggedIn ? <AccountInfo /> : <Navigate to="/login" />} />
           <Route path="/recommendations" element={isLoggedIn && isCandidate ? <JobRecommendations /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
           <Route path="/job/:id" element={<JobDetails />} />
           <Route path="/create-job" element={isLoggedIn && (isEmployer || isAdmin) ? <CreateJob /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
@@ -175,7 +184,7 @@ function App() {
           <Route path="/my-applications" element={isLoggedIn && isCandidate ? <MyApplications /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
           <Route path="/employer-dashboard" element={isLoggedIn && isEmployer ? <EmployerDashboard /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
           <Route path="/admin-dashboard" element={isLoggedIn && isAdmin ? <AdminDashboard /> : <Navigate to={isLoggedIn ? "/jobs" : "/login"} />} />
-          <Route path="/" element={<Navigate to="/jobs" />} />
+          <Route path="/" element={<HomePage />} />
         </Routes>
       </div>
     </Router>

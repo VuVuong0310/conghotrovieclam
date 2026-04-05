@@ -184,18 +184,24 @@ public class AuthController {
         try {
             // Exchange authorization code for tokens
             String tokenEndpoint = "https://oauth2.googleapis.com/token";
-            Map<String, String> tokenParams = new HashMap<>();
-            tokenParams.put("code", request.getCredential());
-            tokenParams.put("client_id", googleClientId);
-            tokenParams.put("client_secret", googleClientSecret);
-            tokenParams.put("redirect_uri", "https://conghotrovieclam.online/google-callback");
-            tokenParams.put("grant_type", "authorization_code");
+
+            org.springframework.util.LinkedMultiValueMap<String, String> tokenParams = new org.springframework.util.LinkedMultiValueMap<>();
+            tokenParams.add("code", request.getCredential());
+            tokenParams.add("client_id", googleClientId);
+            tokenParams.add("client_secret", googleClientSecret);
+            tokenParams.add("redirect_uri", "https://conghotrovieclam.online/jobportal/google-callback");
+            tokenParams.add("grant_type", "authorization_code");
+
+            org.springframework.http.HttpHeaders tokenHeaders = new org.springframework.http.HttpHeaders();
+            tokenHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
+            org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, String>> tokenRequest =
+                new org.springframework.http.HttpEntity<>(tokenParams, tokenHeaders);
 
             org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
 
             // Get access token
             @SuppressWarnings("unchecked")
-            Map<String, Object> tokenResponse = restTemplate.postForObject(tokenEndpoint, tokenParams, Map.class);
+            Map<String, Object> tokenResponse = restTemplate.postForObject(tokenEndpoint, tokenRequest, Map.class);
             String accessToken = (String) tokenResponse.get("access_token");
 
             // Get user info
