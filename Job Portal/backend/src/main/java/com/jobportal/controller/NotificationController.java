@@ -109,7 +109,7 @@ public class NotificationController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> createNotification(@RequestBody NotificationRequest request, Authentication auth) {
         Optional<User> user = userRepository.findByUsername(auth.getName());
         if (!user.isPresent()) {

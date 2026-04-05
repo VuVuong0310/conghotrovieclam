@@ -240,6 +240,16 @@ public class JobApplicationController {
                 return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
             }
 
+            // Verify employer owns the job of this application
+            Optional<JobApplication> appOpt = jobApplicationService.getApplicationById(applicationId);
+            if (!appOpt.isPresent()) {
+                return ResponseEntity.status(404).body(new MessageResponse("Application not found"));
+            }
+            if (appOpt.get().getJobPost().getEmployer() == null ||
+                    !appOpt.get().getJobPost().getEmployer().getId().equals(employer.get().getId())) {
+                return ResponseEntity.status(403).body(new MessageResponse("Không có quyền mời phỏng vấn cho đơn này"));
+            }
+
             JobApplication application = jobApplicationService.updateStatus(applicationId, JobApplication.Status.INTERVIEW);
             if (application == null) {
                 return ResponseEntity.status(404).body(new MessageResponse("Application not found"));

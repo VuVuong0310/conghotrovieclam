@@ -49,6 +49,18 @@ class AuthService {
   }
 
   getRoles() {
+    const token = this.getToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.roles && Array.isArray(payload.roles)) {
+          return payload.roles;
+        }
+      } catch (e) {
+        // fallback if token decode fails
+      }
+    }
+    // Fallback to localStorage for old tokens without roles claim
     const roles = localStorage.getItem('roles');
     return roles ? JSON.parse(roles) : [];
   }

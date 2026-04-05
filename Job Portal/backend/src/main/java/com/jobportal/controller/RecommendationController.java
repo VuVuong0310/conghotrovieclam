@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.jobportal.repository.UserRepository;
 import com.jobportal.entity.User;
 import java.util.Optional;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/recommendations")
@@ -25,6 +26,7 @@ public class RecommendationController {
     private UserRepository userRepository;
 
     @GetMapping("/jobs")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
     public ResponseEntity<?> getRecommendedJobs(
             Authentication auth,
             @RequestParam(defaultValue = "0") int page,

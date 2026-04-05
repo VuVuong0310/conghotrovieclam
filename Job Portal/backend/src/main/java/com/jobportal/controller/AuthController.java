@@ -239,11 +239,11 @@ public class AuthController {
                 userRepository.save(user);
             }
 
-            // Generate JWT
-            String jwt = jwtUtils.generateTokenFromUsername(email);
+            // Generate JWT with roles
             List<String> roles = user.getRoles().stream()
                     .map(Role::getName)
                     .collect(java.util.stream.Collectors.toList());
+            String jwt = jwtUtils.generateTokenFromUsername(email, roles);
 
             return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getUsername(), roles));
         } catch (Exception e) {
@@ -252,6 +252,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password-direct")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> resetPasswordDirect(@RequestBody ResetPasswordDirectRequest request) {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Email không được để trống."));
