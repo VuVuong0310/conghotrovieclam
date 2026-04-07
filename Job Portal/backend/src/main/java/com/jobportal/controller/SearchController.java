@@ -31,6 +31,7 @@ public class SearchController {
             @RequestParam(required = false) Double minSalary,
             @RequestParam(required = false) Double maxSalary,
             @RequestParam(required = false) String employmentType,
+            @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -53,7 +54,7 @@ public class SearchController {
             }
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             
-            Page<JobPost> result = jobSearchService.searchJobs(keyword, location, minSalary, maxSalary, employmentType, pageable);
+            Page<JobPost> result = jobSearchService.searchJobs(keyword, location, minSalary, maxSalary, employmentType, category, pageable);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error searching jobs");

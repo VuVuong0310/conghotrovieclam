@@ -127,8 +127,31 @@ function CandidateProfile() {
   const handleDeleteProj = async (id) => { if (!window.confirm('Xóa dự án này?')) return; try { await ProjectService.deleteProject(userId, id); loadProjects(); } catch (e) { alert('Lỗi khi xóa'); } };
 
   const [cvTemplate, setCvTemplate] = useState('classic');
+  const [downloading, setDownloading] = useState(false);
   const viewCV = () => window.open(`${API_BASE}/profile/${userId}/cv?template=${cvTemplate}`, '_blank');
   const viewResume = () => window.open(`${API_BASE}/profile/${userId}/resume`, '_blank');
+
+  const downloadPDF = async () => {
+    setDownloading(true);
+    try {
+      const res = await axios.get(`${API_BASE}/profile/${userId}/cv/pdf?template=${cvTemplate}`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV_${profile.fullName || 'candidate'}_${cvTemplate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('PDF download failed', e);
+      alert('Tải PDF thất bại. Vui lòng thử lại.');
+    }
+    setDownloading(false);
+  };
 
   const cvTemplates = [
     { key: 'classic', label: 'Classic', desc: 'Sidebar xanh đậm, 2 cột truyền thống', color: '#2c3e50' },
@@ -244,6 +267,10 @@ function CandidateProfile() {
                 <div className="d-flex gap-2 mb-3">
                   <button type="submit" className="btn btn-primary"><i className="bi bi-check-lg me-1"></i>Lưu Hồ Sơ</button>
                   <button type="button" className="btn btn-outline-primary" onClick={viewCV}><i className="bi bi-file-earmark-text me-1"></i>Xem CV</button>
+                  <button type="button" className="btn btn-success" onClick={downloadPDF} disabled={downloading}>
+                    <i className={`bi ${downloading ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'} me-1`}></i>
+                    {downloading ? 'Đang tải...' : 'Tải PDF'}
+                  </button>
                   <button type="button" className="btn btn-outline-secondary" onClick={viewResume}><i className="bi bi-paperclip me-1"></i>Xem Resume</button>
                 </div>
                 <div>

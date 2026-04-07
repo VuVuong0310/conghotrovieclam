@@ -189,7 +189,7 @@ public class AuthController {
             tokenParams.add("code", request.getCredential());
             tokenParams.add("client_id", googleClientId);
             tokenParams.add("client_secret", googleClientSecret);
-            tokenParams.add("redirect_uri", "https://conghotrovieclam.online/jobportal/google-callback");
+            tokenParams.add("redirect_uri", "https://conghotrovieclam.online/google-callback");
             tokenParams.add("grant_type", "authorization_code");
 
             org.springframework.http.HttpHeaders tokenHeaders = new org.springframework.http.HttpHeaders();

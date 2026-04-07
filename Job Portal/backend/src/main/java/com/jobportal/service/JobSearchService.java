@@ -18,8 +18,8 @@ public class JobSearchService {
     private JobPostRepository jobPostRepository;
 
     public Page<JobPost> searchJobs(String keyword, String location, Double minSalary, 
-                                     Double maxSalary, String employmentType, Pageable pageable) {
-        Specification<JobPost> spec = buildSpecification(keyword, location, minSalary, maxSalary, employmentType);
+                                     Double maxSalary, String employmentType, String category, Pageable pageable) {
+        Specification<JobPost> spec = buildSpecification(keyword, location, minSalary, maxSalary, employmentType, category);
         return jobPostRepository.findAll(spec, pageable);
     }
 
@@ -27,14 +27,14 @@ public class JobSearchService {
         Specification<JobPost> spec = (root, query, cb) -> 
             cb.and(
                 cb.equal(root.get("status"), JobPost.JobStatus.APPROVED),
-                cb.like(cb.lower(root.get("description")), "%" + category.toLowerCase() + "%")
+                cb.equal(root.join("category").get("name"), category)
             );
         return jobPostRepository.findAll(spec, pageable);
     }
 
     private Specification<JobPost> buildSpecification(String keyword, String location, 
                                                        Double minSalary, Double maxSalary, 
-                                                       String employmentType) {
+                                                       String employmentType, String category) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -62,6 +62,10 @@ public class JobSearchService {
 
             if (employmentType != null && !employmentType.isEmpty()) {
                 predicates.add(cb.equal(root.get("employmentType"), employmentType));
+            }
+
+            if (category != null && !category.isEmpty()) {
+                predicates.add(cb.equal(root.join("category").get("name"), category));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

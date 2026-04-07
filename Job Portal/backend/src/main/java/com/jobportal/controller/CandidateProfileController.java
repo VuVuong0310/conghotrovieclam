@@ -95,6 +95,23 @@ public class CandidateProfileController {
                 .body(html);
     }
 
+    @GetMapping("/{userId}/cv/pdf")
+    public ResponseEntity<?> downloadCvPdf(@PathVariable Long userId,
+            @RequestParam(value = "template", defaultValue = "classic") String template) {
+        try {
+            byte[] pdfBytes = candidateProfileService.renderCvPdf(userId, template);
+            if (pdfBytes == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"CV_" + userId + "_" + template + ".pdf\"")
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new MessageResponse("PDF generation failed: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/{userId}/photo")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE')")
     public ResponseEntity<?> uploadPhoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file, Authentication auth) {

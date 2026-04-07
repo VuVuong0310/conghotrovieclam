@@ -31,7 +31,7 @@ function JobListAdvanced() {
       params.append('sort', filters.sortBy);
       params.append('page', page);
       params.append('size', 12);
-      const res = await axios.get(`${API_BASE}/jobs/search/advanced?${params.toString()}`);
+      const res = await axios.get(`${API_BASE}/search/jobs?${params.toString()}`);
       setJobs(res.data.content || res.data || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err) {

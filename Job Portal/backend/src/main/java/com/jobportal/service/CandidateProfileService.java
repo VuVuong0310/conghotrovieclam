@@ -173,6 +173,57 @@ public class CandidateProfileService {
         return renderCvHtml(userId, "classic");
     }
 
+    /** Generate PDF from CV HTML using openhtmltopdf */
+    public byte[] renderCvPdf(Long userId, String template) {
+        String html = renderCvHtml(userId, template);
+        if (html == null) return null;
+
+        // Convert photo URLs to base64 data URIs for PDF embedding
+        Path photoPath = getProfileImagePath(userId);
+        if (photoPath != null && photoPath.toFile().exists()) {
+            try {
+                byte[] photoBytes = java.nio.file.Files.readAllBytes(photoPath);
+                String ext = photoPath.toString().endsWith(".png") ? "png" : "jpeg";
+                String base64 = java.util.Base64.getEncoder().encodeToString(photoBytes);
+                String dataUri = "data:image/" + ext + ";base64," + base64;
+                html = html.replace("/api/profile/" + userId + "/photo", dataUri);
+            } catch (Exception e) {
+                // ignore, photo just won't appear
+            }
+        }
+
+        // Inject @font-face for NotoSans and override all font-family to use it
+        String fontCss = "@font-face { font-family: 'NotoSans'; src: url('fonts/NotoSans-Regular.ttf'); font-weight: 400; -fs-font-subset: complete-font; } "
+                + "@font-face { font-family: 'NotoSans'; src: url('fonts/NotoSans-Bold.ttf'); font-weight: 700; -fs-font-subset: complete-font; } "
+                + "* { font-family: 'NotoSans', sans-serif !important; } ";
+        html = html.replace("<style>", "<style>" + fontCss);
+
+        // openhtmltopdf requires XHTML - fix common HTML issues
+        html = html.replace("<br>", "<br/>");
+        html = html.replace("<hr>", "<hr/>");
+        html = html.replace("<meta charset='UTF-8'/>", "<meta charset=\"UTF-8\"/>");
+        // Fix unclosed img tags
+        html = html.replaceAll("<img([^>]*[^/])>", "<img$1/>");
+
+        try (java.io.ByteArrayOutputStream os = new java.io.ByteArrayOutputStream()) {
+            com.openhtmltopdf.pdfboxout.PdfRendererBuilder builder = new com.openhtmltopdf.pdfboxout.PdfRendererBuilder();
+            builder.useFastMode();
+
+            // Register NotoSans fonts for Vietnamese support
+            builder.useFont(() -> getClass().getResourceAsStream("/fonts/NotoSans-Regular.ttf"), "NotoSans", 400,
+                    com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle.NORMAL, true);
+            builder.useFont(() -> getClass().getResourceAsStream("/fonts/NotoSans-Bold.ttf"), "NotoSans", 700,
+                    com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle.NORMAL, true);
+
+            builder.withHtmlContent(html, null);
+            builder.toStream(os);
+            builder.run();
+            return os.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("PDF generation failed: " + e.getMessage(), e);
+        }
+    }
+
     // ========================= CLASSIC TEMPLATE (original) =========================
     private String renderClassicTemplate(CandidateProfile p, Long userId) {
 
